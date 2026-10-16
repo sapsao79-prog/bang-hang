@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng hàng livestream 608</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800;900&display=swap">
+<style>
+/* Bố cục: dải đỏ thương hiệu → ô tổng (còn / sắp hết / hết) → lọc nhóm → bảng 3 cột Tên · Số lượng · Báo giá */
+:root {
+  --do-100:#fdecea; --do-600:#c22826; --do-700:#a51e24;
+  --cham-100:#ecedf7; --cham-600:#3e4395; --cham-700:#32367a;
+  --nen:#fbf7f2; --mat:#ffffff; --chu:#1f1a17; --chu-phu:#6f6660; --vien:#e6e0da; --vien-dam:#cfc7c0;
+  --khoi:#f3efeb; --focus:#3e4395;
+  --con-nen:#ecedf7; --con-chu:#32367a; --sap-nen:#fdecea; --sap-chu:#a51e24; --het-nen:#c22826; --het-chu:#ffffff;
+  --font:"Be Vietnam Pro","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --nen:#181a3c; --mat:#26295d; --chu:#ffffff; --chu-phu:#d3d5ec; --vien:#32367a; --vien-dam:#5459a8;
+  --khoi:#1f2250; --focus:#ffffff; --con-nen:#32367a; --con-chu:#ffffff; --sap-nen:#561014; --sap-chu:#f9cfcb;
+  --cham-100:#32367a; --cham-700:#ffffff; --cham-600:#a7aad8; --do-600:#f2a29b; color-scheme:dark } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--nen); color:var(--chu); font-family:var(--font); font-size:16px; line-height:1.5 }
+.dai { background:linear-gradient(90deg,#e93526,#c22826,#a51e24); color:#fff; padding-inline:16px }
+.dai-trong { max-width:1000px; margin:0 auto; padding-block:20px 22px; display:flex; flex-wrap:wrap; gap:8px 24px; align-items:flex-end; justify-content:space-between }
+.thuong-hieu { font-size:13px; font-weight:800; letter-spacing:.12em }
+h1 { margin:2px 0 0; font-size:clamp(24px,5vw,34px); font-weight:900; line-height:1.15; text-transform:uppercase }
+.song { font-size:13px; font-weight:500; display:flex; align-items:center; gap:8px }
+.cham-song { width:10px; height:10px; border-radius:50%; background:#fff }
+.cham-song.tat { background:#f9cfcb }
+.vach { height:6px; background:var(--mat) }
+main { max-width:1000px; margin:0 auto; padding:20px 16px 48px; display:grid; gap:16px }
+.tong { display:grid; grid-template-columns:repeat(3,1fr); gap:10px }
+.o-tong { border-radius:12px; padding:12px 14px; display:grid; gap:2px; border:0; font:inherit; text-align:left; cursor:pointer; color:inherit }
+.o-tong b { font-size:28px; font-weight:900; line-height:1.1; font-variant-numeric:tabular-nums }
+.o-tong span { font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase }
+.o-tong.con { background:var(--con-nen); color:var(--con-chu) }
+.o-tong.sap { background:var(--sap-nen); color:var(--sap-chu) }
+.o-tong.het { background:var(--het-nen); color:var(--het-chu) }
+.o-tong[aria-pressed="true"] { outline:3px solid var(--focus); outline-offset:2px }
+.cong-cu { display:flex; flex-wrap:wrap; gap:10px; align-items:center }
+.tim { flex:1 1 220px; min-width:0; height:44px; border:1.5px solid var(--vien-dam); border-radius:8px; padding:0 14px; font:inherit; background:var(--mat); color:var(--chu) }
+.nut { height:44px; padding:0 16px; border-radius:8px; border:0; font:inherit; font-weight:700; cursor:pointer }
+.nut-chinh { background:#c22826; color:#fff }
+.nut-phu { background:transparent; color:var(--chu); border:1.5px solid var(--vien-dam) }
+:focus-visible { outline:2px solid var(--focus); outline-offset:2px }
+.nhom-tabs { display:flex; flex-wrap:wrap; gap:8px }
+.nhom-tab { height:36px; padding:0 14px; border-radius:999px; border:1.5px solid var(--vien-dam); background:var(--mat); color:var(--chu); font:inherit; font-size:14px; font-weight:700; cursor:pointer }
+.nhom-tab[aria-pressed="true"] { background:#c22826; border-color:#c22826; color:#fff }
+.bang { background:var(--mat); border:1px solid var(--vien); border-radius:16px; overflow:hidden }
+.dong { display:grid; grid-template-columns:minmax(0,1fr) 230px 150px; gap:12px; align-items:center; padding:12px 16px; border-top:1px solid var(--vien) }
+.dau { border-top:0; background:var(--khoi); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--chu-phu); padding-block:10px }
+.tieu-de-nhom { padding:10px 16px; background:var(--cham-100); color:var(--cham-700); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; border-top:1px solid var(--vien); display:flex; justify-content:space-between; gap:8px }
+.tieu-de-nhom span { font-weight:600; letter-spacing:0; text-transform:none }
+.ten { min-width:0; display:grid; gap:2px }
+.ma { font-size:12px; font-weight:800; letter-spacing:.06em; color:var(--cham-600) }
+.ten-sp { font-weight:700; font-size:17px; overflow-wrap:anywhere }
+.cap-nhat { font-size:12px; color:var(--chu-phu) }
+.dong.het-hang .ten-sp { text-decoration:line-through; text-decoration-thickness:2px; color:var(--chu-phu) }
+.dong.het-hang { background:var(--khoi) }
+.sl { display:flex; align-items:center; gap:6px }
+.sl input { width:64px; height:40px; text-align:center; font:inherit; font-weight:800; font-size:18px; border:1.5px solid var(--vien-dam); border-radius:8px; background:var(--mat); color:var(--chu) }
+.tron { width:36px; height:40px; border-radius:8px; border:1.5px solid var(--vien-dam); background:transparent; color:var(--chu); font:inherit; font-size:20px; font-weight:700; cursor:pointer; line-height:1 }
+.nhan { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:999px; font-size:12px; font-weight:800; text-transform:uppercase; white-space:nowrap; background:#c22826; color:#fff }
+.nut-het { height:40px; padding:0 10px; border-radius:8px; border:1.5px solid #c22826; background:transparent; color:var(--do-600); font:inherit; font-size:13px; font-weight:800; cursor:pointer }
+.gia input { width:100%; min-width:0; height:40px; font:inherit; font-weight:800; font-size:18px; border:1.5px solid var(--vien-dam); border-radius:8px; padding:0 10px; background:var(--mat); color:var(--do-600) }
+.dang-luu { opacity:.6 }
+.trong { padding:40px 20px; text-align:center; color:var(--chu-phu); display:grid; gap:6px; justify-items:center }
+.trong strong { color:var(--chu); font-size:18px }
+form.them { display:grid; grid-template-columns:120px minmax(0,1fr) 170px 100px 120px auto; gap:10px; background:var(--mat); border:1px dashed var(--vien-dam); border-radius:16px; padding:14px }
+form.them label { display:grid; gap:4px; font-size:12px; font-weight:700; color:var(--chu-phu); min-width:0 }
+form.them input, form.them select { height:42px; border:1.5px solid var(--vien-dam); border-radius:8px; padding:0 10px; font:inherit; background:var(--mat); color:var(--chu); min-width:0 }
+form.them .nut { align-self:end }
+.ghi-chu { font-size:13px; color:var(--chu-phu); margin:0 }
+.loi { color:#a51e24; background:#fdecea; border-radius:8px; padding:10px 14px; font-size:14px; font-weight:600 }
+[hidden] { display:none !important }
+@media (max-width:720px) {
+  .dau { display:none }
+  .dong { grid-template-columns:1fr 1fr; padding:14px }
+  .ten { grid-column:1 / -1 }
+  form.them { grid-template-columns:1fr 1fr }
+  form.them .rong { grid-column:1 / -1 }
+  .o-tong b { font-size:24px }
+}
+</style>
+</head>
+<body>
+<header class="dai">
+  <div class="dai-trong">
+    <div><div class="thuong-hieu">608 AN LỘC PHÁT</div><h1>Bảng hàng livestream</h1></div>
+    <div class="song"><span class="cham-song tat" id="chamSong"></span><span id="trangThai">Đang tải…</span></div>
+  </div>
+</header>
+<div class="vach"></div>
+<main>
+  <div class="tong" role="group" aria-label="Lọc theo tình trạng">
+    <button class="o-tong con" id="locCon" data-loc="con" aria-pressed="false"><b id="soCon">0</b><span>Còn hàng</span></button>
+    <button class="o-tong sap" id="locSap" data-loc="sap" aria-pressed="false"><b id="soSap">0</b><span>Sắp hết (≤ 3)</span></button>
+    <button class="o-tong het" id="locHet" data-loc="het" aria-pressed="false"><b id="soHet">0</b><span>Hết hàng</span></button>
+  </div>
+  <div class="cong-cu">
+    <input class="tim" id="tim" type="search" placeholder="Tìm mã hoặc tên sản phẩm…" aria-label="Tìm sản phẩm">
+    <button class="nut nut-phu" id="boLoc" hidden>Bỏ lọc</button>
+  </div>
+  <div class="nhom-tabs" id="nhomTabs" role="group" aria-label="Lọc theo nhóm hàng"></div>
+  <div id="loi" class="loi" hidden></div>
+  <section class="bang" aria-label="Danh sách sản phẩm">
+    <div class="dong dau"><div>Sản phẩm</div><div>Số lượng tồn</div><div>Báo giá (Đài tệ)</div></div>
+    <div id="danhSach"><div class="trong"><strong>Đang tải danh sách hàng…</strong><span>Kho điền số lượng ở đây, bên live xem trực tiếp.</span></div></div>
+  </section>
+  <form class="them" id="formThem" autocomplete="off">
+    <label>Mã<input id="themMa" placeholder="VD: CG01"></label>
+    <label class="rong">Tên sản phẩm<input id="themTen" required placeholder="VD: Bộ chăn ga lụa 1m8"></label>
+    <label>Nhóm<select id="themNhom"><option>Chăn</option><option>Ga gối &amp; phụ kiện</option><option>Tạp hóa</option></select></label>
+    <label>Số lượng<input id="themSl" type="number" min="0" inputmode="numeric" placeholder="0"></label>
+    <label>Giá (Đài tệ)<input id="themGia" inputmode="numeric" placeholder="VD: 590"></label>
+    <button class="nut nut-chinh" type="submit">+ Thêm hàng</button>
+  </form>
+  <p class="ghi-chu">Số lượng về 0 thì tự hiện <b>HẾT HÀNG</b>. Số chị Huệ sửa được lưu thẳng vào Google Sheets; máy khác tự cập nhật sau khoảng 15 giây.</p>
+</main>
+<script>
+(function () {
+  var SAP_HET = 3, CHU_KY = 15000;
+  var THU_TU_NHOM = ["Chăn", "Ga gối & phụ kiện", "Tạp hóa"];
+  var hang = [], loc = null, tuKhoa = "", nhomLoc = "Chăn";
+  var choGhi = {}, hen = {}, dangGhi = {};
+  var $ = function (id) { return document.getElementById(id); };
+
+  // Số liệu nằm trong Google Sheets; trang này gọi cổng dữ liệu Apps Script (không cần đăng nhập)
+  var API = "https://script.google.com/macros/s/AKfycbyYh-LVBFSJk2BOfpNUPBXjkS3bSfbRF8wxgWcKC9k_UXbIelRWjmh683AhvdDKp8vWjA/exec";
+  var TEN_LENH = { layDuLieu: "list", ghi: "ghi", them: "them" };
+  function goi(ham) {
+    var thamSo = Array.prototype.slice.call(arguments, 1);
+    var q = { action: TEN_LENH[ham], t: Date.now() };
+    if (ham === "ghi") { q.ma = thamSo[0]; Object.keys(thamSo[1]).forEach(function (k) { var v = thamSo[1][k]; q[k] = v == null ? "" : v; }); }
+    if (ham === "them") Object.keys(thamSo[0]).forEach(function (k) { q[k] = thamSo[0][k] == null ? "" : thamSo[0][k]; });
+    var url = API + "?" + Object.keys(q).map(function (k) { return encodeURIComponent(k) + "=" + encodeURIComponent(q[k]); }).join("&");
+    // Google thỉnh thoảng làm rớt 1 lần gọi: tự thử lại tối đa 2 lần
+    function thu(lan) {
+      return fetch(url, { credentials: "omit", cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw new Error("Máy chủ trả lỗi " + r.status); return r.json(); })
+        .catch(function (e) {
+          if (lan >= 2) throw e;
+          return new Promise(function (ok) { setTimeout(ok, 1500 * (lan + 1)); }).then(function () { return thu(lan + 1); });
+        });
+    }
+    return thu(0).then(function (kq) { if (!kq.ok) throw new Error(kq.error || "Lỗi không rõ"); return kq.data; });
+  }
+
+  function boDau(s) { return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D").toLowerCase(); }
+  function tinhTrang(sl) { if (sl == null || sl === "") return "chua"; sl = Number(sl); if (sl <= 0) return "het"; if (sl <= SAP_HET) return "sap"; return "con"; }
+  function tenNhom(x) { return x.nhom || "Hàng thêm tay"; }
+  function gio(iso) {
+    if (!iso) return ""; var d = new Date(iso); if (isNaN(d)) return "";
+    var hh = String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+    return "Cập nhật " + hh + (d.toDateString() === new Date().toDateString() ? " hôm nay" : " " + d.getDate() + "/" + (d.getMonth() + 1));
+  }
+  function dinhGia(g) { var n = Number(String(g).replace(/,/g, "")); return g === "" || g == null ? "" : (isNaN(n) ? String(g) : n.toLocaleString("en-US")); }
+  function baoLoi(m) { $("loi").textContent = m; $("loi").hidden = !m; }
+  function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
+  function songKetNoi(ok, chu) { $("chamSong").classList.toggle("tat", !ok); $("trangThai").textContent = chu; }
+
+  function trongNhom(x) { return !nhomLoc || tenNhom(x) === nhomLoc; }
+  function veTong() {
+    var c = 0, s = 0, h = 0;
+    hang.forEach(function (x) { if (!trongNhom(x)) return; var t = tinhTrang(x.soLuong); if (t === "con") c++; else if (t === "sap") s++; else if (t === "het") h++; });
+    $("soCon").textContent = c; $("soSap").textContent = s; $("soHet").textContent = h;
+    ["locCon", "locSap", "locHet"].forEach(function (id) { $(id).setAttribute("aria-pressed", String($(id).dataset.loc === loc)); });
+    $("boLoc").hidden = !loc && !tuKhoa;
+  }
+  function veNhomTabs() {
+    var co = {}; hang.forEach(function (x) { co[tenNhom(x)] = (co[tenNhom(x)] || 0) + 1; });
+    var ds = THU_TU_NHOM.filter(function (n) { return co[n]; }).concat(Object.keys(co).filter(function (n) { return THU_TU_NHOM.indexOf(n) < 0; }));
+    if (nhomLoc && !co[nhomLoc] && hang.length) nhomLoc = null;
+    var k = $("nhomTabs"); k.textContent = "";
+    [["", "Tất cả (" + hang.length + ")"]].concat(ds.map(function (n) { return [n, n + " (" + co[n] + ")"]; })).forEach(function (p) {
+      var b = el("button", "nhom-tab", p[1]); b.type = "button";
+      b.setAttribute("aria-pressed", String((nhomLoc || "") === p[0]));
+      b.onclick = function () { nhomLoc = p[0] || null; ve(); };
+      k.appendChild(b);
+    });
+  }
+
+  function ve() {
+    var dangGo = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.ma;
+    veTong(); veNhomTabs();
+    if (dangGo && $("danhSach").contains(document.activeElement)) { capNhatTinh(); return; }
+    var k = $("danhSach"); k.textContent = "";
+    var tk = boDau(tuKhoa);
+    var ds = hang.filter(function (x) {
+      if (!tk && !trongNhom(x)) return false;
+      if (loc && tinhTrang(x.soLuong) !== loc) return false;
+      if (tk && boDau(x.ma + " " + x.ten).indexOf(tk) < 0) return false;
+      return true;
+    });
+    if (!hang.length) { var t = el("div", "trong"); t.appendChild(el("strong", null, "Chưa có sản phẩm nào")); t.appendChild(el("span", null, "Thêm sản phẩm đầu tiên ở ô bên dưới.")); k.appendChild(t); return; }
+    if (!ds.length) { var t2 = el("div", "trong"); t2.appendChild(el("strong", null, "Không có sản phẩm khớp")); t2.appendChild(el("span", null, "Thử bỏ lọc hoặc gõ từ khóa khác.")); k.appendChild(t2); return; }
+    var truoc = null;
+    ds.forEach(function (x) {
+      var n = tenNhom(x);
+      if (n !== truoc) {
+        truoc = n;
+        var cung = ds.filter(function (y) { return tenNhom(y) === n; });
+        var con = cung.filter(function (y) { return tinhTrang(y.soLuong) !== "het"; }).length;
+        var h = el("div", "tieu-de-nhom", n); h.appendChild(el("span", null, con + " còn · " + (cung.length - con) + " hết")); k.appendChild(h);
+      }
+      k.appendChild(veDong(x));
+    });
+  }
+
+  function capNhatTinh() {
+    hang.forEach(function (x) {
+      var d = document.querySelector('.dong[data-ma="' + CSS.escape(x.ma) + '"]'); if (!d) return;
+      d.classList.toggle("het-hang", tinhTrang(x.soLuong) === "het");
+      d.classList.toggle("dang-luu", !!choGhi[x.ma] || !!dangGhi[x.ma]);
+      var c = d.querySelector(".cap-nhat"); if (c) c.textContent = choGhi[x.ma] || dangGhi[x.ma] ? "Đang lưu…" : gio(x.capNhat);
+    });
+  }
+
+  function veDong(x) {
+    var t = tinhTrang(x.soLuong);
+    var d = el("div", "dong" + (t === "het" ? " het-hang" : "")); d.dataset.ma = x.ma;
+    var ten = el("div", "ten");
+    ten.appendChild(el("span", "ma", x.ma));
+    ten.appendChild(el("span", "ten-sp", x.ten));
+    ten.appendChild(el("span", "cap-nhat", choGhi[x.ma] || dangGhi[x.ma] ? "Đang lưu…" : gio(x.capNhat)));
+    d.appendChild(ten);
+
+    var sl = el("div", "sl");
+    var tru = el("button", "tron", "−"); tru.type = "button"; tru.setAttribute("aria-label", "Bớt 1 " + x.ten);
+    var o = el("input"); o.type = "number"; o.min = "0"; o.inputMode = "numeric"; o.dataset.ma = x.ma;
+    o.value = x.soLuong == null ? "" : x.soLuong; o.setAttribute("aria-label", "Số lượng " + x.ten);
+    var cong = el("button", "tron", "+"); cong.type = "button"; cong.setAttribute("aria-label", "Thêm 1 " + x.ten);
+    tru.onclick = function () { var v = Math.max(0, (Number(o.value) || 0) - 1); o.value = v; ghiSua(x.ma, { soLuong: v }, 800); };
+    cong.onclick = function () { var v = (Number(o.value) || 0) + 1; o.value = v; ghiSua(x.ma, { soLuong: v }, 800); };
+    o.oninput = function () { ghiSua(x.ma, { soLuong: o.value === "" ? null : Math.max(0, Math.floor(Number(o.value))) }, 900); };
+    o.onkeydown = function (e) { if (e.key === "Enter") o.blur(); };
+    o.onblur = function () { setTimeout(ve, 0); };
+    sl.appendChild(tru); sl.appendChild(o); sl.appendChild(cong);
+    if (t !== "het") { var het = el("button", "nut-het", "Hết"); het.type = "button"; het.title = "Đánh dấu hết hàng"; het.onclick = function () { o.value = 0; ghiSua(x.ma, { soLuong: 0 }, 0); setTimeout(ve, 0); }; sl.appendChild(het); }
+    else sl.appendChild(el("span", "nhan", "Hết hàng"));
+    d.appendChild(sl);
+
+    var gia = el("div", "gia");
+    var g = el("input"); g.dataset.ma = x.ma; g.value = dinhGia(x.gia); g.placeholder = "Giá"; g.inputMode = "numeric";
+    g.setAttribute("aria-label", "Giá " + x.ten);
+    g.oninput = function () { ghiSua(x.ma, { gia: g.value.trim() }, 1200); };
+    g.onkeydown = function (e) { if (e.key === "Enter") g.blur(); };
+    g.onblur = function () { setTimeout(ve, 0); };
+    gia.appendChild(g);
+    d.appendChild(gia);
+    return d;
+  }
+
+  // Gộp nhiều lần bấm liên tiếp của 1 mã thành 1 lần lưu vào Sheet
+  function ghiSua(ma, thayDoi, tre) {
+    var x = hang.find(function (h) { return h.ma === ma; });
+    if (x) Object.assign(x, thayDoi);
+    choGhi[ma] = Object.assign(choGhi[ma] || {}, thayDoi);
+    clearTimeout(hen[ma]);
+    veTong(); capNhatTinh();
+    hen[ma] = setTimeout(function () { gui(ma); }, tre);
+  }
+  function gui(ma) {
+    if (dangGhi[ma] || !choGhi[ma]) return;
+    var goi1 = choGhi[ma]; delete choGhi[ma]; dangGhi[ma] = goi1;
+    goi("ghi", ma, goi1).then(function (kq) {
+      var x = hang.find(function (h) { return h.ma === ma; }); if (x && kq) x.capNhat = kq.capNhat;
+      baoLoi("");
+    }, function (e) {
+      choGhi[ma] = Object.assign(goi1, choGhi[ma] || {});
+      baoLoi("Chưa lưu được mã " + ma + ". Kiểm tra mạng, em sẽ thử lại. (" + ((e && e.message) || e) + ")");
+      setTimeout(function () { gui(ma); }, 5000);
+    }).then(function () { dangGhi[ma] = false; if (choGhi[ma]) gui(ma); capNhatTinh(); });
+  }
+
+  function taiLai() {
+    return goi("layDuLieu").then(function (ds) {
+      ds.forEach(function (x) { if (dangGhi[x.ma]) Object.assign(x, dangGhi[x.ma]); if (choGhi[x.ma]) Object.assign(x, choGhi[x.ma]); });
+      hang = ds;
+      songKetNoi(true, "Đang trực tuyến · " + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }));
+      if (!Object.keys(choGhi).length && !Object.keys(dangGhi).some(function (k) { return dangGhi[k]; })) baoLoi("");
+      ve();
+    }, function (e) { songKetNoi(false, "Mất kết nối, đang thử lại…"); baoLoi("Không tải được bảng hàng: " + ((e && e.message) || e)); });
+  }
+
+  $("formThem").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var sp = { ma: $("themMa").value.trim(), ten: $("themTen").value.trim(), nhom: $("themNhom").value, soLuong: $("themSl").value, gia: $("themGia").value.trim() };
+    if (!sp.ma || !sp.ten) { baoLoi("Cần nhập cả mã và tên sản phẩm."); return; }
+    goi("them", sp).then(function () { $("formThem").reset(); baoLoi(""); nhomLoc = sp.nhom; return taiLai(); }, function (err) { baoLoi((err && err.message) || "Chưa thêm được sản phẩm."); });
+  });
+  ["locCon", "locSap", "locHet"].forEach(function (id) { $(id).onclick = function () { loc = loc === this.dataset.loc ? null : this.dataset.loc; ve(); }; });
+  $("tim").oninput = function () { tuKhoa = this.value; ve(); };
+  $("boLoc").onclick = function () { loc = null; tuKhoa = ""; $("tim").value = ""; ve(); };
+
+  taiLai();
+  setInterval(function () { if (!document.hidden) taiLai(); }, CHU_KY);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) taiLai(); });
+})();
+</script>
+</body>
+</html>
