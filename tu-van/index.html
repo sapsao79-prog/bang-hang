@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>608 An Lộc Phát – Tư vấn</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --do-100:#fdecea; --do-500:#e93526; --do-600:#c22826; --do-700:#a51e24;
+  --cham-100:#ecedf7; --cham-600:#3e4395; --cham-700:#32367a;
+  --trang:#ffffff; --kem:#fbf7f2; --xam-100:#f3efeb; --xam-200:#e6e0da; --xam-300:#cfc7c0; --xam-500:#6f6660; --xam-700:#45403c; --muc:#1f1a17;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Be Vietnam Pro","Segoe UI",Arial,sans-serif;background:var(--kem);color:var(--muc);display:flex;flex-direction:column;font-size:16px;line-height:1.6}
+header{background:linear-gradient(90deg,var(--do-500),var(--do-600),var(--do-700));color:var(--trang);padding:14px 16px 0}
+.ten{font-weight:800;letter-spacing:.02em;font-size:20px;line-height:1.15}
+.phu{font-size:13px;opacity:.95;margin-top:2px}
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tab{flex:1;border:0;border-radius:8px 8px 0 0;padding:10px 6px;font:700 15px/1.2 inherit;font-family:inherit;background:rgba(255,255,255,.18);color:var(--trang);cursor:pointer}
+.tab.on{background:var(--kem);color:var(--do-600)}
+main{flex:1;overflow-y:auto;padding:16px;max-width:720px;width:100%;margin:0 auto}
+.nhanh{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.nhanh button{border:1px solid var(--xam-300);background:var(--trang);color:var(--cham-700);border-radius:9999px;padding:8px 14px;font:500 14px/1.2 inherit;font-family:inherit;cursor:pointer}
+.nhanh button:hover{border-color:var(--cham-600)}
+.tin{max-width:85%;padding:10px 14px;border-radius:16px;margin:8px 0;white-space:pre-wrap;word-wrap:break-word}
+.khach{background:var(--do-600);color:var(--trang);margin-left:auto;border-bottom-right-radius:4px}
+.shop{background:var(--trang);border:1px solid var(--xam-200);border-bottom-left-radius:4px}
+.tin.co-anh{max-width:100%;width:100%}
+.anh{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.anh button{padding:0;border:1px solid var(--xam-200);border-radius:8px;background:var(--trang);cursor:zoom-in;overflow:hidden;position:relative}
+.anh img{display:block;width:100%;height:auto}
+.anh button::after{content:"Bấm để phóng to";position:absolute;left:0;right:0;bottom:0;background:rgba(31,26,23,.55);color:var(--trang);font-size:12px;line-height:1.3;padding:4px;text-align:center}
+.xem{position:fixed;inset:0;background:var(--muc);z-index:20;display:none;flex-direction:column}
+.xem.mo{display:flex}
+.xem-tren{display:flex;justify-content:space-between;align-items:center;color:var(--trang);padding:10px 12px;font-weight:700}
+.xem-tren button,.xem-nut{background:rgba(255,255,255,.15);color:var(--trang);border:0;border-radius:9999px;width:44px;height:44px;font-size:24px;line-height:1;cursor:pointer}
+.xem-khung{flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;touch-action:pinch-zoom pan-x pan-y}
+.xem-khung img{max-width:100%;max-height:100%;object-fit:contain}
+.xem-duoi{display:flex;justify-content:space-between;padding:10px 12px 16px}
+.dat{display:inline-block;margin-top:8px;background:var(--do-600);color:var(--trang);border:0;border-radius:8px;padding:8px 14px;font:700 14px/1.2 inherit;font-family:inherit;cursor:pointer}
+.dang{color:var(--xam-500);font-size:13px;margin:4px 0}
+footer{background:var(--trang);border-top:1px solid var(--xam-200);padding:10px 16px}
+.go{display:flex;gap:8px;max-width:720px;margin:0 auto}
+.go input{flex:1;border:1px solid var(--xam-300);border-radius:8px;padding:12px;font:16px inherit;font-family:inherit;min-width:0}
+.go button{background:var(--do-600);color:var(--trang);border:0;border-radius:8px;padding:0 18px;font:700 16px inherit;font-family:inherit;cursor:pointer}
+.go button:disabled{opacity:.6}
+.chan{max-width:720px;margin:6px auto 0;font-size:13px;color:var(--xam-500);text-align:center}
+.nen{position:fixed;inset:0;background:rgba(31,26,23,.5);display:none;align-items:flex-end;justify-content:center;z-index:9}
+.nen.mo{display:flex}
+.hop{background:var(--trang);width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:20px 16px;max-height:92vh;overflow-y:auto}
+.hop h2{margin:0 0 4px;font-size:22px;line-height:1.25;color:var(--do-600)}
+.hop label{display:block;font-weight:700;font-size:14px;margin:12px 0 4px}
+.hop input,.hop textarea,.hop select{width:100%;border:1px solid var(--xam-300);border-radius:8px;padding:10px;font:16px inherit;font-family:inherit;background:var(--trang);color:var(--muc)}
+.hop textarea{min-height:72px}
+.nut2{display:flex;gap:8px;margin-top:16px}
+.nut2 button{flex:1;border-radius:8px;padding:12px;font:700 16px inherit;font-family:inherit;cursor:pointer}
+.gui{background:var(--do-600);color:var(--trang);border:0}
+.huy{background:var(--trang);color:var(--xam-700);border:1px solid var(--xam-300)}
+.bao{background:var(--cham-100);color:var(--cham-700);border-radius:8px;padding:10px;margin-top:12px;display:none}
+:focus-visible{outline:2px solid var(--cham-600);outline-offset:2px}
+@media (min-width:720px){.nen{align-items:center}.hop{border-radius:16px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="ten">608 AN LỘC PHÁT</div>
+  <div class="phu">Tư vấn nhanh – nhắn là có trả lời</div>
+  <div class="tabs">
+    <button class="tab on" data-trang="ban_hang">Chăn ga – Áo</button>
+    <button class="tab" data-trang="van_chuyen">Vận chuyển Đài – Việt</button>
+  </div>
+</header>
+<main id="khung">
+  <div class="nhanh" id="nhanh"></div>
+  <div id="tin"></div>
+</main>
+<footer>
+  <form class="go" id="go">
+    <input id="o" maxlength="500" autocomplete="off" placeholder="Nhập câu hỏi...">
+    <button id="nutgui">Gửi</button>
+  </form>
+  <div class="chan">Trợ lý tự động – giá chính xác nhân viên xác nhận khi lên đơn</div>
+</footer>
+
+<div class="nen" id="nen">
+  <form class="hop" id="form">
+    <h2 id="tieude">Đặt hàng</h2>
+    <div style="font-size:14px;color:var(--xam-700)">Để lại thông tin, nhân viên liên hệ chốt đơn ngay.</div>
+    <div style="font-size:13px;color:var(--xam-500);margin-top:8px">Điền nick TikTok hoặc Facebook (ít nhất 1) để shop tìm lại anh/chị khi cần hỗ trợ.</div>
+    <label for="tiktok">Nick TikTok</label><input id="tiktok" maxlength="100" placeholder="vd: @lan.nguyen92" autocapitalize="off">
+    <label for="facebook">Tên / link Facebook</label><input id="facebook" maxlength="200" placeholder="vd: Lan Nguyễn hoặc facebook.com/...">
+    <label for="ten">Tên người nhận (không bắt buộc)</label><input id="ten" maxlength="100">
+    <label for="sdt">Số điện thoại *</label><input id="sdt" inputmode="tel" maxlength="20" required>
+    <div id="chieu-bao" style="display:none"><label for="chieu">Chiều gửi</label>
+      <select id="chieu"><option>Đài Loan → Việt Nam</option><option>Việt Nam → Đài Loan</option></select></div>
+    <label for="noidung" id="nhan-nd">Món muốn mua (mã / màu / size / số lượng)</label><textarea id="noidung" maxlength="800"></textarea>
+    <label for="diachi" id="nhan-dc">Địa chỉ nhận (7-11 / FamilyMart hoặc nhà)</label><textarea id="diachi" maxlength="800"></textarea>
+    <div class="bao" id="bao"></div>
+    <div class="nut2"><button type="button" class="huy" id="dong">Đóng</button><button class="gui" id="gui-don">Gửi thông tin</button></div>
+  </form>
+</div>
+
+<div class="xem" id="xem" role="dialog" aria-label="Xem ảnh">
+  <div class="xem-tren"><span id="xem-so"></span><button type="button" id="xem-dong" aria-label="Đóng">×</button></div>
+  <div class="xem-khung" id="xem-khung"><img id="xem-anh" alt="Ảnh mẫu phóng to"></div>
+  <div class="xem-duoi"><button type="button" class="xem-nut" id="xem-truoc" aria-label="Ảnh trước">‹</button><button type="button" class="xem-nut" id="xem-sau" aria-label="Ảnh sau">›</button></div>
+</div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbzlkDMBMPsId9rfKfHcMINwxFYiZCTeg_FPpLiQX-TJpayx5VIpt9EMMJzR_Enj3h6i4A/exec';
+const _fetch = window.fetch.bind(window);
+window.fetch = (url, opt) => {
+  if (typeof url !== 'string' || !url.startsWith('/api/')) return _fetch(url, opt);
+  const body = opt && opt.body ? JSON.parse(opt.body) : {};
+  body.action = url.slice(5);
+  return _fetch(API, {method: 'POST', body: JSON.stringify(body)});
+};
+let dsXem = [], viTri = 0, x0 = null;
+function hienAnh() {
+  document.getElementById('xem-anh').src = dsXem[viTri];
+  document.getElementById('xem-so').textContent = (viTri + 1) + ' / ' + dsXem.length;
+  document.getElementById('xem-truoc').style.visibility = dsXem.length > 1 ? 'visible' : 'hidden';
+  document.getElementById('xem-sau').style.visibility = dsXem.length > 1 ? 'visible' : 'hidden';
+}
+function moAnh(ds, k) { dsXem = ds; viTri = k; hienAnh(); document.getElementById('xem').classList.add('mo'); }
+function doiAnh(b) { viTri = (viTri + b + dsXem.length) % dsXem.length; hienAnh(); }
+document.getElementById('xem-dong').onclick = () => document.getElementById('xem').classList.remove('mo');
+document.getElementById('xem-truoc').onclick = () => doiAnh(-1);
+document.getElementById('xem-sau').onclick = () => doiAnh(1);
+document.addEventListener('keydown', e => {
+  if (!document.getElementById('xem').classList.contains('mo')) return;
+  if (e.key === 'Escape') document.getElementById('xem').classList.remove('mo');
+  if (e.key === 'ArrowLeft') doiAnh(-1);
+  if (e.key === 'ArrowRight') doiAnh(1);
+});
+const khungXem = document.getElementById('xem-khung');
+khungXem.addEventListener('touchstart', e => { x0 = e.touches.length === 1 ? e.touches[0].clientX : null; }, {passive: true});
+khungXem.addEventListener('touchend', e => {
+  if (x0 === null || window.visualViewport && window.visualViewport.scale > 1.05) return;
+  const dx = e.changedTouches[0].clientX - x0; x0 = null;
+  if (Math.abs(dx) > 50) doiAnh(dx < 0 ? 1 : -1);
+});
+
+const NHANH = {
+  ban_hang: ['Bảng giá chăn ga', 'Áo điều hòa giá bao nhiêu?', 'Áo giữ nhiệt có những loại nào?', 'Chọn size áo thế nào?', 'Phí ship 7-11 bao nhiêu?', 'Đặt hàng'],
+  van_chuyen: ['Gửi Đài → Việt giá bao nhiêu?', 'Gửi Việt → Đài giá bao nhiêu?', 'Địa chỉ kho ở đâu?', 'Hàng nào không gửi được?', 'Bao lâu thì nhận được?', 'Gửi hàng']
+};
+const CHAO = {
+  ban_hang: 'Dạ em chào anh/chị! Shop có chăn ga, áo điều hòa, áo giữ nhiệt, gối... giao tận 7-11/FamilyMart ở Đài Loan. Anh/chị cần xem món nào ạ?',
+  van_chuyen: 'Dạ em chào anh/chị! Bên em nhận gửi hàng 2 chiều Đài Loan – Việt Nam. Anh/chị gửi chiều nào, hàng gì và khoảng bao nhiêu cân ạ?'
+};
+let trang = 'ban_hang';
+const lich = {ban_hang: [], van_chuyen: []};
+let phien;
+try { phien = localStorage.getItem('phien608'); } catch (e) {}
+if (!phien) { phien = Math.random().toString(36).slice(2); try { localStorage.setItem('phien608', phien); } catch (e) {} }
+const $ = id => document.getElementById(id);
+// Link ca nhan hoa tu sale/bot: ?tk=<nick TikTok>&fb=<ten Facebook>&mang=van_chuyen -> nho san cho form
+(() => {
+  const q = new URLSearchParams(location.search);
+  const ghi = (k, v) => { try { localStorage.setItem('608_' + k, v); } catch (e) {} };
+  if (q.get('tk')) ghi('tiktok', q.get('tk').slice(0, 100));
+  if (q.get('fb')) ghi('facebook', q.get('fb').slice(0, 200));
+  if (q.get('mang') === 'van_chuyen') setTimeout(() => document.querySelector('.tab[data-trang="van_chuyen"]').click(), 0);
+})();
+
+function ve() {
+  $('nhanh').innerHTML = '';
+  NHANH[trang].forEach(c => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = c;
+    b.onclick = () => (c === 'Đặt hàng' || c === 'Gửi hàng') ? moForm() : hoi(c);
+    $('nhanh').appendChild(b);
+  });
+  $('tin').innerHTML = '';
+  if (!lich[trang].length) lich[trang].push({ai: true, noi_dung: CHAO[trang]});
+  lich[trang].forEach(m => themTin(m));
+}
+
+function themTin(m) {
+  const d = document.createElement('div');
+  d.className = 'tin ' + (m.ai ? 'shop' : 'khach');
+  d.textContent = m.noi_dung;
+  if (m.anh && m.anh.length) {
+    d.classList.add('co-anh');
+    const a = document.createElement('div'); a.className = 'anh';
+    m.anh.forEach((u, k) => {
+      const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', 'Phóng to ảnh ' + (k + 1));
+      const i = document.createElement('img'); i.src = u; i.alt = 'Ảnh mẫu ' + (k + 1);
+      i.onload = () => { const kh = document.getElementById('khung'); kh.scrollTop = kh.scrollHeight; };
+      b.appendChild(i); b.onclick = () => moAnh(m.anh, k); a.appendChild(b);
+    });
+    d.appendChild(a);
+  }
+  if (m.form) {
+    const b = document.createElement('button'); b.className = 'dat'; b.type = 'button';
+    b.textContent = trang === 'van_chuyen' ? 'Gửi hàng ngay' : 'Đặt hàng ngay'; b.onclick = moForm;
+    d.appendChild(document.createElement('br')); d.appendChild(b);
+  }
+  $('tin').appendChild(d);
+  $('khung').scrollTop = $('khung').scrollHeight;
+}
+
+async function hoi(cau) {
+  cau = cau.trim(); if (!cau) return;
+  const t = trang;
+  const m = {ai: false, noi_dung: cau};
+  lich[t].push(m); themTin(m);
+  $('nutgui').disabled = true;
+  const cho = document.createElement('div'); cho.className = 'dang'; cho.textContent = 'Shop đang trả lời...';
+  $('tin').appendChild(cho); $('khung').scrollTop = $('khung').scrollHeight;
+  let kq;
+  try {
+    const r = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({trang: t, phien, lich_su: lich[t].map(x => ({ai: x.ai, noi_dung: x.noi_dung}))})});
+    kq = await r.json();
+  } catch (e) {
+    kq = {tra_loi: 'Dạ mạng đang chập chờn, anh/chị thử lại hoặc để lại SĐT nha.', anh: [], form: true};
+  }
+  cho.remove(); $('nutgui').disabled = false;
+  const tl = {ai: true, noi_dung: kq.tra_loi, anh: kq.anh, form: kq.form};
+  lich[t].push(tl);
+  if (t === trang) themTin(tl);
+}
+
+function nho(k, v) { try { if (v === undefined) return localStorage.getItem('608_' + k) || ''; localStorage.setItem('608_' + k, v); } catch (e) { return ''; } }
+function lichGui() { return lich[trang].map(x => ({ai: x.ai, noi_dung: x.noi_dung})); }
+
+async function moForm() {
+  const vc = trang === 'van_chuyen';
+  $('tieude').textContent = vc ? 'Gửi hàng Đài – Việt' : 'Đặt hàng';
+  $('chieu-bao').style.display = vc ? 'block' : 'none';
+  $('nhan-nd').textContent = vc ? 'Hàng gửi là gì, khoảng bao nhiêu kg' : 'Món muốn mua (mã / màu / size / số lượng)';
+  $('nhan-dc').textContent = vc ? 'Địa chỉ lấy hàng / người nhận' : 'Địa chỉ nhận (7-11 / FamilyMart hoặc nhà)';
+  $('bao').style.display = 'none';
+  // Khach quay lai: dien san ten / SDT / dia chi lan truoc (luu tren may khach)
+  if (!$('ten').value) $('ten').value = nho('ten');
+  if (!$('tiktok').value) $('tiktok').value = nho('tiktok');
+  if (!$('facebook').value) $('facebook').value = nho('facebook');
+  if (!$('sdt').value) $('sdt').value = nho('sdt');
+  if (!$('diachi').value && !vc) $('diachi').value = nho('diachi');
+  $('nen').classList.add('mo');
+  if (lich[trang].filter(x => !x.ai).length) {
+    $('bao').style.display = 'block'; $('bao').textContent = 'Đang điền sẵn từ nội dung chat...';
+    try {
+      const r = await fetch('/api/dien-form', {method: 'POST', headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({trang, phien, lich_su: lichGui()})});
+      const k = await r.json();
+      if (k.ten && !$('ten').value) $('ten').value = k.ten;
+      if (k.tiktok && !$('tiktok').value) $('tiktok').value = k.tiktok;
+      if (k.facebook && !$('facebook').value) $('facebook').value = k.facebook;
+      if (k.sdt && !$('sdt').value) $('sdt').value = k.sdt;
+      if (k.mon && !$('noidung').value) $('noidung').value = k.mon;
+      if (k.dia_chi && !$('diachi').value) $('diachi').value = k.dia_chi;
+    } catch (e) {}
+    $('bao').style.display = 'none';
+  }
+}
+
+$('dong').onclick = () => $('nen').classList.remove('mo');
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  const vc = trang === 'van_chuyen';
+  const nd = (vc ? '[' + $('chieu').value + '] ' : '') + $('noidung').value;
+  if (!$('tiktok').value.trim() && !$('facebook').value.trim()) {
+    $('bao').style.display = 'block'; $('bao').textContent = 'Anh/chị điền giúp em nick TikTok hoặc Facebook để shop tìm lại khi cần hỗ trợ ạ';
+    $('tiktok').focus(); return;
+  }
+  $('gui-don').disabled = true;
+  $('bao').style.display = 'block'; $('bao').textContent = 'Đang gửi và tính tổng đơn...';
+  let ok = false, loi = '', tong = '';
+  try {
+    const r = await fetch('/api/don', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({trang, phien, ten: $('ten').value, tiktok: $('tiktok').value, facebook: $('facebook').value,
+        sdt: $('sdt').value, dia_chi: $('diachi').value, noi_dung: nd, lich_su: lichGui()})});
+    const k = await r.json(); ok = !!k.ok; loi = k.loi || ''; tong = k.tong_don || '';
+  } catch (e) { loi = 'Mạng lỗi, anh/chị thử lại giúp em ạ'; }
+  $('gui-don').disabled = false;
+  if (!ok) { $('bao').textContent = loi; return; }
+  nho('ten', $('ten').value); nho('sdt', $('sdt').value); nho('tiktok', $('tiktok').value); nho('facebook', $('facebook').value); if (!vc) nho('diachi', $('diachi').value);
+  $('form').reset(); $('bao').style.display = 'none'; $('nen').classList.remove('mo');
+  const tl = {ai: true, noi_dung: (tong ? tong + '\n\n' : '') +
+    (vc ? 'Dạ shop đã nhận thông tin gửi hàng, nhân viên sẽ liên hệ xác nhận và cấp mã khách cho anh/chị ạ!'
+        : 'Dạ shop đã nhận đơn, nhân viên sẽ liên hệ xác nhận ngay cho anh/chị ạ!')};
+  lich[trang].push(tl); themTin(tl);
+};
+$('go').onsubmit = e => { e.preventDefault(); const v = $('o').value; $('o').value = ''; hoi(v); };
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('on', x === b));
+  trang = b.dataset.trang; ve();
+});
+ve();
+</script>
+</body>
+</html>
