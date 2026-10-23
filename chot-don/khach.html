@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Gửi địa chỉ nhận hàng – 608</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800;900&display=swap">
+<style>
+/* Trang khách tự điền địa chỉ: dải đỏ → món đã chốt → form → nút gửi. Khách mở từ tin nhắn shop gửi. */
+:root { --do:#c22826; --do-100:#fdecea; --cham:#3e4395; --cham-100:#ecedf7; --xanh:#1d6b3f; --xanh-100:#e3f4ea;
+  --nen:#fbf7f2; --mat:#fff; --chu:#1f1a17; --chu-phu:#6f6660; --vien:#cfc7c0; --font:"Be Vietnam Pro","Segoe UI",Arial,sans-serif; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --nen:#181a3c; --mat:#26295d; --chu:#fff; --chu-phu:#d3d5ec; --vien:#5459a8; --cham-100:#32367a; --do-100:#4a1f2a; --xanh-100:#1d4a33; --xanh:#bff0d2; color-scheme:dark } }
+* { box-sizing:border-box }
+body { margin:0; background:var(--nen); color:var(--chu); font-family:var(--font); font-size:17px; line-height:1.5 }
+header { background:linear-gradient(90deg,#e93526,#c22826,#a51e24); color:#fff; padding:14px 16px 16px }
+header small { font-size:12px; font-weight:800; letter-spacing:.12em }
+h1 { margin:2px 0 0; font-size:24px; font-weight:900; line-height:1.2 }
+main { max-width:520px; margin:0 auto; padding:14px 16px 40px; display:grid; gap:14px }
+.khoi { background:var(--mat); border:1px solid var(--vien); border-radius:14px; padding:14px; display:grid; gap:10px }
+.mon { display:flex; justify-content:space-between; gap:10px; font-weight:800 }
+.tong { border-top:1px dashed var(--vien); padding-top:8px; display:flex; justify-content:space-between; font-weight:900; font-size:19px }
+label { display:grid; gap:4px; font-size:14px; font-weight:800; color:var(--chu-phu) }
+input, textarea { font:inherit; font-size:17px; color:var(--chu); background:var(--mat); border:1.5px solid var(--vien); border-radius:10px; padding:10px 12px; min-height:50px; width:100% }
+textarea { min-height:80px; resize:vertical }
+.chon { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px }
+.chon button { min-height:56px; border-radius:12px; border:2px solid var(--vien); background:var(--mat); color:var(--chu); font:inherit; font-size:15px; font-weight:800; cursor:pointer; padding:4px }
+.chon button[aria-pressed="true"] { background:var(--cham); border-color:var(--cham); color:#fff }
+.goi-y { font-size:14px; color:var(--chu-phu) }
+.goi-y a { color:var(--cham); font-weight:800 }
+.nut { min-height:58px; border:0; border-radius:14px; background:var(--do); color:#fff; font:inherit; font-size:19px; font-weight:900; cursor:pointer; width:100% }
+.nut[disabled] { opacity:.6 }
+.loi { background:var(--do-100); color:#a51e24; border-radius:10px; padding:10px 12px; font-weight:700 }
+.xong { background:var(--xanh-100); color:var(--xanh); border-radius:14px; padding:20px 16px; text-align:center; font-weight:800; display:grid; gap:6px }
+.xong b { font-size:22px }
+[hidden] { display:none !important }
+:focus-visible { outline:2px solid var(--cham); outline-offset:2px }
+</style>
+</head>
+<body>
+<header><small>608 AN LỘC PHÁT</small><h1>Gửi địa chỉ nhận hàng</h1></header>
+<main>
+  <div class="loi" id="loi" hidden></div>
+  <div id="dangTai" class="goi-y">Đang tải đơn của chị…</div>
+
+  <section class="khoi" id="khoiDon" hidden>
+    <div id="chao" style="font-weight:800"></div>
+    <div id="dsMon" style="display:grid;gap:4px"></div>
+    <div class="tong"><span>Tạm tính</span><span id="tong"></span></div>
+    <div class="goi-y">Phí ship (nếu có) shop báo sau ạ.</div>
+  </section>
+
+  <form class="khoi" id="form" hidden>
+    <label>Tên người nhận<input id="ten" autocomplete="name" required></label>
+    <label>Số điện thoại (Đài Loan)<input id="sdt" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxx" required></label>
+    <div style="display:grid;gap:6px">
+      <span style="font-size:14px;font-weight:800;color:var(--chu-phu)">Nhận hàng ở đâu?</span>
+      <div class="chon" id="chonDV">
+        <button type="button" data-v="SEVEN">7-11</button>
+        <button type="button" data-v="FAMILY">FamilyMart</button>
+        <button type="button" data-v="NHÀ">Giao tận nhà</button>
+      </div>
+    </div>
+    <div id="khungCH" hidden style="display:grid;gap:10px">
+      <label>Mã cửa hàng (店號)<input id="soCH" inputmode="numeric" placeholder="VD 123456"></label>
+      <label>Tên cửa hàng (門市)<input id="tenCH" placeholder="VD 長崗門市"></label>
+      <div class="goi-y" id="tim7"></div>
+    </div>
+    <label id="khungNha" hidden>Địa chỉ nhà<textarea id="nha" placeholder="Ghi đầy đủ: thành phố, quận, đường, số nhà"></textarea></label>
+    <label>Ghi chú cho shop (không bắt buộc)<input id="ghiChu" placeholder="VD: giờ nhận, màu…"></label>
+    <button type="submit" class="nut" id="gui">Gửi địa chỉ cho shop</button>
+  </form>
+
+  <section class="xong" id="xong" hidden>
+    <b>✅ Shop đã nhận địa chỉ</b>
+    <span>Cảm ơn chị! Shop sẽ gửi hàng và báo mã vận đơn sớm ạ.</span>
+  </section>
+</main>
+<script>
+(function () {
+  var API = "https://script.google.com/macros/s/AKfycbzHwfjQRWuFpgvT6Fo7RI-zfRhwspeHIz6PQZjvRHmD82z6QkmRNCQmnzdTRQ7l1NgRQw/exec";
+  var q = new URLSearchParams(location.search), d = q.get("d") || "", k = q.get("k") || "";
+  var THU = q.get("thu") === "1", dv = "";
+  var $ = function (id) { return document.getElementById(id); };
+  function loi(m) { $("loi").textContent = m; $("loi").hidden = !m; }
+  function tien(n) { return (Number(n) || 0).toLocaleString("en-US") + " kuai"; }
+  function goi(body) {
+    if (THU) return new Promise(function (ok) { setTimeout(function () { ok(body ? { ok: true, soDon: 1 } : { tenKhach: "Khách mẫu", kenh: "NỘI THẤT", mon: [{ mua: "Q68", tien: 850 }, { mua: "2 K12", tien: 600 }], daDien: false, coDiaChi: false, huy: false, daVaoFile: false }); }, 300); });
+    var p = body
+      ? fetch(API, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
+      : fetch(API + "?" + new URLSearchParams({ action: "donKhach", d: d, k: k, t: Date.now() }), { credentials: "omit", cache: "no-store" });
+    return p.then(function (r) { return r.json(); }).then(function (x) { if (!x.ok) throw new Error(x.error || "Có lỗi, chị thử lại giúp em."); return x.data; });
+  }
+  function chonDV(v) {
+    dv = v;
+    document.querySelectorAll("#chonDV button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.v === v); });
+    $("khungCH").hidden = !(v === "SEVEN" || v === "FAMILY"); $("khungNha").hidden = v !== "NHÀ";
+    var tim = $("tim7"); tim.textContent = "";
+    if (v === "SEVEN" || v === "FAMILY") {
+      tim.append("Chưa biết mã cửa hàng? ");
+      var a = document.createElement("a"); a.target = "_blank"; a.rel = "noopener";
+      a.href = v === "SEVEN" ? "https://emap.pcsc.com.tw/" : "https://www.family.com.tw/Marketing/zh/Map";
+      a.textContent = v === "SEVEN" ? "Tìm cửa hàng 7-11 gần nhà" : "Tìm cửa hàng FamilyMart gần nhà";
+      tim.appendChild(a); tim.append(" (hoặc chỉ cần ghi tên cửa hàng).");
+    }
+  }
+  document.querySelectorAll("#chonDV button").forEach(function (b) { b.onclick = function () { chonDV(b.dataset.v); }; });
+
+  if (!THU && (!d || !k)) { $("dangTai").hidden = true; loi("Link chưa đúng. Chị nhắn lại shop để lấy link mới giúp em nhé."); return; }
+  goi().then(function (x) {
+    $("dangTai").hidden = true;
+    $("chao").textContent = "Chị " + (x.tenKhach || "") + " ơi, shop " + (x.kenh || "608") + " xác nhận chị đã chốt:";
+    var ds = $("dsMon"), tong = 0;
+    x.mon.forEach(function (m) {
+      var r = document.createElement("div"); r.className = "mon";
+      var a = document.createElement("span"); a.textContent = m.mua; var b = document.createElement("span"); b.textContent = tien(m.tien);
+      r.appendChild(a); r.appendChild(b); ds.appendChild(r); tong += Number(m.tien) || 0;
+    });
+    $("tong").textContent = tien(tong); $("khoiDon").hidden = false;
+    if (x.huy) return loi("Đơn này đã hủy. Chị nhắn shop nếu cần đặt lại ạ.");
+    if (x.daVaoFile) return loi("Shop đã lên đơn cho chị rồi ạ. Muốn đổi địa chỉ chị nhắn shop giúp em.");
+    if (x.daDien) { $("xong").hidden = false; $("xong").querySelector("span").textContent = "Chị đã gửi địa chỉ rồi ạ. Muốn sửa thì điền lại bên dưới."; }
+    $("form").hidden = false;
+  }, function (e) { $("dangTai").hidden = true; loi(e.message); });
+
+  $("form").onsubmit = function (e) {
+    e.preventDefault(); loi("");
+    if (!dv) return loi("Chị chọn nhận hàng ở 7-11, FamilyMart hay giao tận nhà giúp em.");
+    $("gui").disabled = true; $("gui").textContent = "Đang gửi…";
+    goi({ action: "khachDien", d: d, k: k, ten: $("ten").value, sdt: $("sdt").value, dichVu: dv,
+      soCuaHang: $("soCH").value, tenCuaHang: $("tenCH").value, diaChiNha: $("nha").value, ghiChu: $("ghiChu").value })
+      .then(function () { $("form").hidden = true; $("xong").hidden = false; $("xong").querySelector("span").textContent = "Cảm ơn chị! Shop sẽ gửi hàng và báo mã vận đơn sớm ạ."; window.scrollTo(0, 0); },
+        function (er) { loi(er.message); })
+      .finally(function () { $("gui").disabled = false; $("gui").textContent = "Gửi địa chỉ cho shop"; });
+  };
+})();
+</script>
+</body>
+</html>
