@@ -121,6 +121,15 @@ main { max-width:900px; margin:0 auto; padding:12px 16px 60px; display:grid; gap
 .canh-bao { background:#c22826; color:#fff; font-size:13px; font-weight:800; border-radius:8px; padding:4px 8px }
 .gop { font-size:13px; font-weight:700; color:var(--cham-600) }
 .trich { font-size:13px; font-style:italic; color:var(--chu-phu); overflow-wrap:anywhere }
+.nhan-khach { display:inline-block; font-size:12px; font-weight:800; padding:0 7px; border-radius:999px; background:var(--khoi); color:var(--chu-phu); margin-left:4px; white-space:nowrap }
+.nhan-khach.quen { background:var(--cham-100); color:var(--cham-700) }
+.nhan-khach.than { background:var(--vang-100); color:var(--vang-700) }
+.nhan-khach.bom { background:#c22826; color:#fff }
+.nhan-khach.dc { background:var(--xanh-100); color:var(--xanh-700) }
+.nhac-live { background:var(--vang-100); color:var(--vang-700); border-radius:14px; padding:12px 14px; display:grid; gap:4px }
+.nhac-live b { font-size:15px }
+.nhac-live .ten-ds { font-size:18px; font-weight:900; overflow-wrap:anywhere; color:var(--chu) }
+.mau-tin textarea { font:inherit; font-size:14px; width:100%; min-height:90px; border:1.5px solid var(--vien-dam); border-radius:8px; padding:8px; background:var(--mat); color:var(--chu) }
 /* tổng kết */
 .bang { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:15px }
 .bang th, .bang td { padding:8px 6px; border-top:1px solid var(--vien); text-align:right }
@@ -184,6 +193,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
 
   <!-- ===== LIVE ===== -->
   <section class="man" id="man-live">
+    <div class="nhac-live" id="nhacLive" hidden></div>
     <div id="dsNickToi" style="display:grid;gap:12px"></div>
     <button type="button" class="nut nut-phu nut-to" id="nutKetThuc" hidden>⏹ Kết thúc live (tất cả nick của tôi)</button>
     <div class="khoi" id="khoiBatDau">
@@ -221,7 +231,16 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       <input class="tim" id="tim" type="search" placeholder="Tìm tên khách, mã, nick…">
     </div>
     <div class="loc" id="locTT" role="group" aria-label="Lọc trạng thái"></div>
-    <button type="button" class="nut nut-cham" id="copyHet">📋 Copy hết đơn đủ thông tin</button>
+    <div class="hang-nut">
+      <button type="button" class="nut nut-cham gian" id="copyHet">📋 Copy hết đơn đủ thông tin</button>
+      <button type="button" class="nut nut-phu" id="inPhieu">🖨 In phiếu</button>
+    </div>
+    <details class="mau-tin">
+      <summary class="phu" style="cursor:pointer">✏️ Sửa mẫu tin xin địa chỉ</summary>
+      <p class="phu" style="margin:6px 0">Chữ trong ngoặc tự thay: {ten} tên khách · {mon} các món · {tong} tổng tiền · {link} link khách tự điền.</p>
+      <textarea id="mauTin"></textarea>
+      <button type="button" class="nut nut-phu nut-nho" id="mauGoc" style="margin-top:6px">Về mẫu gốc</button>
+    </details>
     <div class="ds" id="dsDon"></div>
   </section>
 
@@ -313,7 +332,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   var LOC_TT = [["cho", "Chờ xử lý"], ["du", "Đủ thông tin"], ["file", "Đã vào file"], ["tat", "Tất cả"]];
   var THU = !API || /[?&]thu=1/.test(location.search);
   var $ = function (id) { return document.getElementById(id); };
-  var S = { phien: [], nick: [], don: [], bom: [], maTam: [] }, binhLuan = [], soCuoi = 0, napBL = false;
+  var S = { phien: [], nick: [], don: [], bom: [], maTam: [], khach: {} }, binhLuan = [], soCuoi = 0, napBL = false;
   var man = nho("man") || "live", locTT = "cho", locNick = "*", dangSua = null, dangLen = null, chupCho = null;
 
   function nho(k, v) {
@@ -388,10 +407,11 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
         { maPhien: "P2", nguoi: "Hằng", nick: "changa.hang2", batDau: bd, ketThuc: "", maHang: "A01", gia: 650, anh: anhMau("A01"), mayNghe: "ĐANG NGHE", lucMayNghe: new Date().toISOString() }
       ],
       don: [
-        { ma: "D1", luc: new Date(t - 40 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG", nguoiLive: "Hằng", maHang: "K12", gia: 300, anh: "", tenKhach: "Khách mẫu A", idKhach: "khachmau.a", muaHang: "K12", phiShip: 0, tong: 300, diaChi: "09xx xxx xxx dc 123456 7-11", dichVu: "SEVEN", ghiChu: "", trangThai: DU, nguoiXuLy: "Như Ý", lucXuLy: "", maPhien: "P1", nick: "changa.hang1", binhLuan: "chốt k12 ạ", soBL: -1, nguon: "BÌNH LUẬN" },
-        { ma: "D2", luc: new Date(t - 20 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG 2", nguoiLive: "Hằng", maHang: "A01", gia: 650, anh: anhMau("A01"), tenKhach: "Khách mẫu B", idKhach: "khachmau.b", muaHang: "A01", phiShip: "", tong: 650, diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: "P2", nick: "changa.hang2", binhLuan: "cho em 1 cái A01", soBL: -2, nguon: "BÌNH LUẬN" }
+        { ma: "D1", luc: new Date(t - 40 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG", nguoiLive: "Hằng", maHang: "K12", gia: 300, anh: "", tenKhach: "Khách mẫu A", idKhach: "khachmau.a", muaHang: "K12", phiShip: 0, tong: 300, diaChi: "09xx xxx xxx dc 123456 7-11", dichVu: "SEVEN", ghiChu: "", trangThai: DU, nguoiXuLy: "Như Ý", lucXuLy: "", maPhien: "P1", nick: "changa.hang1", binhLuan: "chốt k12 ạ", soBL: -1, nguon: "BÌNH LUẬN", khoaKhach: "mau00001", khachDien: new Date(t - 30 * 6e4).toISOString() },
+        { ma: "D2", luc: new Date(t - 20 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG 2", nguoiLive: "Hằng", maHang: "A01", gia: 650, anh: anhMau("A01"), tenKhach: "Khách mẫu B", idKhach: "khachmau.b", muaHang: "A01", phiShip: "", tong: 650, diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: "P2", nick: "changa.hang2", binhLuan: "cho em 1 cái A01", soBL: -2, nguon: "BÌNH LUẬN", khoaKhach: "mau00002", khachDien: "" }
       ],
       bom: [{ tenKhach: "Khách bom mẫu", idKhach: "bom.mau" }],
+      khach: { "khachmau.a": [3, 0, 1], "khachmau.b": [1, 0, 0], "thuha": [6, 0, 1], "bom.mau": [1, 2, 0], "megun": [2, 0, 0] },
       maTam: [{ ma: "A01", luc: bd, nick: "changa.hang2", nguoi: "Hằng", gia: 650, anh: anhMau("A01") }],
       bl: [], so: 0
     };
@@ -417,7 +437,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     var bay = new Date().toISOString();
     var timP = function (m) { var p = T.phien.find(function (x) { return x.maPhien === m; }); if (!p) throw new Error("Không tìm thấy phiên"); return p; };
     switch (q.action) {
-      case "trang": return { phien: T.phien, nick: T.nick, don: T.don, bom: T.bom, maTam: T.maTam };
+      case "trang": return { phien: T.phien, nick: T.nick, don: T.don, bom: T.bom, maTam: T.maTam, khach: T.khach };
       case "binhLuan": var sau = Number(q.sau) || 0; return { ds: T.bl.filter(function (b) { return b.so > sau; }).slice(sau ? -1000 : -300), soCuoi: T.so };
       case "themNick": if (T.nick.some(function (n) { return n.nick === q.nick; })) throw new Error("Nick này đã có."); T.nick.push({ nick: q.nick.toLowerCase(), kenh: (q.kenh || "").toUpperCase() }); return T.nick;
       case "batDau":
@@ -436,7 +456,9 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
         var d = { ma: "D" + Date.now(), luc: bay, ca: caCua(), kenh: kenh, nguoiLive: ph.nguoi, maHang: q.maHang.toUpperCase(), gia: q.gia * sl,
           anh: q.anh ? "data:image/jpeg;base64," + q.anh.duLieu : (ph.anh && ph.maHang === q.maHang.toUpperCase() ? ph.anh : ""),
           tenKhach: bl ? bl.ten : (q.tenKhach || ""), idKhach: bl ? bl.id : "", muaHang: (sl > 1 ? sl + " " : "") + q.maHang.toUpperCase(), phiShip: "", tong: q.gia * sl,
-          diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: ph.maPhien, nick: ph.nick, binhLuan: bl ? bl.noiDung : "", soBL: bl ? bl.so : null, nguon: bl ? "BÌNH LUẬN" : "TAY", nguoiLenDon: q.nguoi };
+          diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: ph.maPhien, nick: ph.nick, binhLuan: bl ? bl.noiDung : "", soBL: bl ? bl.so : null, nguon: bl ? "BÌNH LUẬN" : "TAY", nguoiLenDon: q.nguoi, khoaKhach: "thu" + Date.now().toString(36), khachDien: "" };
+        // Khách quen (mẫu thuha) có sẵn địa chỉ → tự điền như máy chủ thật
+        if (bl && T.khach[bl.id] && T.khach[bl.id][2]) { d.diaChi = "Thu Hà 09xx dc 123456 7-11 - 長崗門市"; d.dichVu = "SEVEN"; d.ghiChu = "Địa chỉ lấy từ đơn trước – hỏi lại khách còn đúng không"; d.trangThai = DU; }
         T.don.push(d); return d;
       case "sua":
         var x = T.don.find(function (d) { return d.ma === q.ma; });
@@ -468,6 +490,20 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function phienDangLive() { return S.phien.filter(function (p) { return !p.ketThuc; }); }
   function phienCuaToi() { var t = boDau(tenToi()); return phienDangLive().filter(function (p) { return t && boDau(p.nguoi) === t; }); }
   function kenhCua(nick) { var x = S.nick.find(function (n) { return n.nick === nick; }); return x && x.kenh ? x.kenh : nick; }
+  // Nhãn khách (giống phân loại khách của phần mềm chốt đơn): mới / quen / thân thiết / từng bom / có sẵn địa chỉ
+  // tru = 1 khi đang xem 1 đơn (số đơn của khách đã gồm đơn này)
+  function nhanKhach(id, tru) {
+    var x = S.khach && S.khach[String(id || "").replace(/^@/, "").toLowerCase()], o = [];
+    if (!id) return o;
+    var don = x ? x[0] - (tru || 0) : 0;
+    if (x && x[1]) o.push(["bom", "⚠️ Bom " + x[1] + " lần"]);
+    if (don >= 5) o.push(["than", "⭐ Thân thiết · " + don + " đơn trước"]);
+    else if (don >= 1) o.push(["quen", "Khách quen · " + don + " đơn trước"]);
+    else o.push(["", "Khách mới"]);
+    if (x && x[2]) o.push(["dc", "📍 Có sẵn địa chỉ"]);
+    return o;
+  }
+  function ganNhan(cha, id, tru) { nhanKhach(id, tru).forEach(function (n) { cha.appendChild(el("span", "nhan-khach " + n[0], n[1])); }); }
   function mayNgheOk(p) { return p.mayNghe === "ĐANG NGHE" && p.lucMayNghe && Date.now() - new Date(p.lucMayNghe).getTime() < 150000; }
   function ve() {
     $("demDon").textContent = S.don.filter(function (d) { return d.trangThai === MOI; }).length;
@@ -508,6 +544,15 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   // ===================== MÀN LIVE =====================
   function veLive() {
     var cuaToi = phienCuaToi(), k = $("dsNickToi"); k.textContent = "";
+    // Nhắc người live đọc tên khách chưa gửi địa chỉ trên live
+    var maP = cuaToi.map(function (p) { return p.maPhien; }), chua = {};
+    S.don.forEach(function (d) { if (maP.indexOf(d.maPhien) >= 0 && d.trangThai === MOI && !d.diaChi && d.tenKhach) chua[d.tenKhach] = 1; });
+    var ten = Object.keys(chua), nh = $("nhacLive"); nh.hidden = !ten.length; nh.textContent = "";
+    if (ten.length) {
+      nh.appendChild(el("b", "", "📢 " + ten.length + " khách chưa gửi địa chỉ – đọc tên trên live:"));
+      nh.appendChild(el("div", "ten-ds", ten.join(" · ")));
+      nh.appendChild(el("div", "", "Gợi ý: \"Chị " + ten[0] + " ơi, chị xem tin nhắn shop gửi link, bấm vào điền địa chỉ giúp em nhé!\""));
+    }
     cuaToi.forEach(function (p) { k.appendChild(theNick(p)); });
     $("nutKetThuc").hidden = !cuaToi.length;
     $("tdBatDau").textContent = cuaToi.length ? "Live thêm nick" : "Bắt đầu live";
@@ -656,6 +701,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       var o = el("div", "bl" + (y ? " " + y : "") + (d ? " xong" : ""));
       var ai = el("div", "ai"); ai.appendChild(el("span", "huy-hieu", "@" + b.nick)); ai.appendChild(document.createTextNode(hh(b.luc) + " · "));
       ai.appendChild(el("b", "", b.ten || b.id)); if (b.id) ai.appendChild(document.createTextNode(" (" + b.id + ")"));
+      ganNhan(ai, b.id, d ? 1 : 0);
       if (donKhach[boDau(b.id)]) ai.appendChild(el("span", "da-don", " · đã có " + donKhach[boDau(b.id)] + " đơn ca này"));
       o.appendChild(ai);
       if (d) o.appendChild(el("span", "da-don", "✅ " + d.maHang));
@@ -738,14 +784,20 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     dau.appendChild(el("span", "ma-gia", (d.muaHang || d.maHang) + " · " + tien(d.tong != null && d.tong !== "" ? d.tong : d.gia)));
     dau.appendChild(el("span", "nhan " + lop, d.trangThai));
     t.appendChild(dau);
-    t.appendChild(el("div", "khach" + (d.tenKhach ? "" : " rong"), d.tenKhach ? d.tenKhach + (d.idKhach ? " (" + d.idKhach + ")" : "") : "Chưa có tên khách"));
+    var kh = el("div", "khach" + (d.tenKhach ? "" : " rong"), d.tenKhach ? d.tenKhach + (d.idKhach ? " (" + d.idKhach + ")" : "") : "Chưa có tên khách");
+    ganNhan(kh, d.idKhach, [HUY, BOM].indexOf(d.trangThai) < 0 ? 1 : 0); t.appendChild(kh);
     if (d.binhLuan) t.appendChild(el("div", "trich", "💬 " + d.binhLuan));
     if (d.diaChi) t.appendChild(el("div", "phu", (d.dichVu ? d.dichVu + " · " : "") + d.diaChi));
+    if (d.khachDien) t.appendChild(el("div", "da-don", "✅ Khách tự điền địa chỉ lúc " + hh(d.khachDien)));
+    else if (d.ghiChu && /đơn trước/.test(d.ghiChu)) t.appendChild(el("div", "gop", "📍 Địa chỉ lấy từ đơn trước – hỏi lại khách còn đúng không"));
+    else if (!d.diaChi && [MOI, DU].indexOf(d.trangThai) >= 0) t.appendChild(el("div", "khach rong", "⏳ Chưa có địa chỉ"));
     t.appendChild(el("div", "phu", hh(d.luc) + " · " + d.nguoiLive + " · @" + (d.nick || d.kenh)));
     if (laBom(d) && d.trangThai !== BOM) t.appendChild(el("div", "canh-bao", "⚠️ Khách này từng BOM hàng"));
     var g = cungKhach(d);
     if (g.length > 1 && [HUY, BOM, VAO_FILE].indexOf(d.trangThai) < 0) t.appendChild(el("div", "gop", "🔗 Khách chốt " + g.length + " mã ca này: " + g.map(function (x) { return x.maHang; }).join(", ") + " – copy sẽ gộp 1 dòng"));
     var hn = el("div", "hang-nut");
+    if (d.khoaKhach && !d.khachDien && [MOI, DU].indexOf(d.trangThai) >= 0)
+      hn.appendChild(nut((d.diaChi ? "nut-phu" : "nut-cham") + " nut-nho", d.diaChi ? "💬 Hỏi lại địa chỉ" : "💬 Xin địa chỉ", function () { xinDiaChi(d); }));
     hn.appendChild(nut("nut-chinh nut-nho", d.trangThai === MOI ? "✍️ Điền thông tin" : "Sửa", function () { moSua(d); }));
     if (d.trangThai === DU) hn.appendChild(nut("nut-cham nut-nho", "📋 Copy", function () { copyDon([d]); }));
     t.appendChild(hn);
@@ -908,6 +960,43 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     var ca = $("locCa").value;
     copyDon(S.don.filter(function (d) { return d.trangThai === DU && (ca === "*" || d.ca === ca); }));
   };
+  // ---- Xin địa chỉ: copy tin có link để khách tự điền (sale dán vào tin nhắn TikTok cho khách) ----
+  var MAU_GOC = "Dạ chị {ten} ơi, shop 608 xác nhận chị đã chốt: {mon} – tạm tính {tong} kuai ạ.\nChị bấm link này điền tên, SĐT và cửa hàng 7-11 / FamilyMart nhận hàng giúp em nhé (chỉ 30 giây): {link}\nEm cảm ơn chị ạ ❤️";
+  $("mauTin").value = nho("mauTin") || MAU_GOC;
+  $("mauTin").oninput = function () { nho("mauTin", $("mauTin").value); };
+  $("mauGoc").onclick = function () { $("mauTin").value = MAU_GOC; nho("mauTin", MAU_GOC); };
+  function linkKhach(d) { var u = new URL("khach.html", location.href); u.search = "?d=" + encodeURIComponent(d.ma) + "&k=" + encodeURIComponent(d.khoaKhach) + (THU ? "&thu=1" : ""); return u.toString(); }
+  function xinDiaChi(d) {
+    var nhom = cungKhach(d).filter(function (x) { return [MOI, DU].indexOf(x.trangThai) >= 0; });
+    if (nhom.indexOf(d) < 0) nhom = [d];
+    var tong = nhom.reduce(function (s, x) { return s + (Number(x.tong) || Number(x.gia) || 0); }, 0);
+    var tin = ($("mauTin").value || MAU_GOC).replace(/\{ten\}/g, d.tenKhach || "").replace(/\{mon\}/g, nhom.map(function (x) { return x.muaHang || x.maHang; }).join(" + "))
+      .replace(/\{tong\}/g, tien(tong)).replace(/\{link\}/g, linkKhach(d)).replace(/  +/g, " ");
+    chepVao(tin).then(function () { toast("Đã copy tin xin địa chỉ – dán vào tin nhắn TikTok cho " + (d.tenKhach || "khách"), true); },
+      function () { prompt("Copy tin này gửi khách:", tin); });
+  }
+
+  // ---- In phiếu: in các đơn đủ thông tin của ca đang xem (dán lên gói hàng / soạn hàng) ----
+  $("inPhieu").onclick = function () {
+    var ca = $("locCa").value;
+    var nhom = nhomTheoKhach(S.don.filter(function (d) { return [DU, VAO_FILE].indexOf(d.trangThai) >= 0 && (ca === "*" || d.ca === ca); }));
+    if (!nhom.length) return toast("Ca này chưa có đơn đủ thông tin để in");
+    var e = function (s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+    var html = nhom.map(function (g) {
+      var d0 = g[0], ship = Math.max.apply(null, g.map(function (d) { return Number(d.phiShip) || 0; }));
+      var hang = g.reduce(function (s, d) { return s + ((Number(d.tong) || Number(d.gia) || 0) - (Number(d.phiShip) || 0)); }, 0);
+      return '<div class="p"><div class="t">608 · ' + e(d0.kenh) + ' · ' + e(d0.ca) + '</div><div class="k">' + e(d0.tenKhach) + (d0.idKhach ? ' <small>(' + e(d0.idKhach) + ')</small>' : '') + '</div>' +
+        '<div class="m">' + g.map(function (d) { return e(d.muaHang || d.maHang); }).join(" + ") + '</div>' +
+        '<div class="a">' + e(d0.dichVu) + ' · ' + e(d0.diaChi) + '</div><div class="g">Hàng ' + tien(hang) + ' + ship ' + tien(ship) + ' = <b>' + tien(hang + ship) + ' kuai</b></div>' +
+        '<div class="n">Live: ' + e(d0.nguoiLive) + ' · @' + e(d0.nick) + (d0.ghiChu ? ' · ' + e(d0.ghiChu) : '') + '</div></div>';
+    }).join("");
+    var f = document.createElement("iframe"); f.style.cssText = "position:fixed;width:0;height:0;border:0;right:0;bottom:0"; document.body.appendChild(f);
+    f.contentDocument.open();
+    f.contentDocument.write('<!doctype html><html><head><meta charset="utf-8"><title>Phiếu đơn 608</title><style>body{font-family:Arial,sans-serif;margin:8mm}.p{border:1.5px solid #000;border-radius:6px;padding:8px 10px;margin-bottom:6mm;page-break-inside:avoid}.t{font-size:11px;color:#555}.k{font-size:20px;font-weight:bold}.m{font-size:17px;font-weight:bold;margin:4px 0}.a{font-size:15px}.g{font-size:15px;margin-top:4px}.n{font-size:11px;color:#555;margin-top:4px}</style></head><body>' + html + '</body></html>');
+    f.contentDocument.close();
+    setTimeout(function () { f.contentWindow.focus(); f.contentWindow.print(); setTimeout(function () { f.remove(); }, 2000); }, 300);
+  };
+
   function xemAnh(id) {
     $("anhTo").src = linkAnh(id, 1600);
     $("moGoc").href = /^(data|blob):/.test(id) ? id : "https://drive.google.com/file/d/" + encodeURIComponent(id) + "/view";
