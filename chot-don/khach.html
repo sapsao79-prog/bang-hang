@@ -46,6 +46,14 @@ textarea { min-height:80px; resize:vertical }
   <div class="loi" id="loi" hidden></div>
   <div id="dangTai" class="goi-y">Đang tải đơn của chị…</div>
 
+  <!-- Link chung (ghim trên live / để ở bio): khách gõ ID TikTok trước -->
+  <form class="khoi" id="khoiId" hidden>
+    <div style="font-weight:800">Chị đã chốt hàng trên live của shop 608? Gửi địa chỉ ở đây ạ.</div>
+    <label>ID TikTok của chị<input id="idTT" autocapitalize="none" autocomplete="off" placeholder="VD: @thuha123"></label>
+    <div class="goi-y">ID là chữ sau dấu <b>@</b> ở trang cá nhân TikTok của chị (Hồ sơ → dưới tên).</div>
+    <button type="submit" class="nut" id="timId">Tiếp tục</button>
+  </form>
+
   <section class="khoi" id="khoiDon" hidden>
     <div id="chao" style="font-weight:800"></div>
     <div id="dsMon" style="display:grid;gap:4px"></div>
@@ -83,15 +91,17 @@ textarea { min-height:80px; resize:vertical }
 (function () {
   var API = "https://script.google.com/macros/s/AKfycbzHwfjQRWuFpgvT6Fo7RI-zfRhwspeHIz6PQZjvRHmD82z6QkmRNCQmnzdTRQ7l1NgRQw/exec";
   var q = new URLSearchParams(location.search), d = q.get("d") || "", k = q.get("k") || "";
-  var THU = q.get("thu") === "1", dv = "";
+  var THU = q.get("thu") === "1", dv = "", CHUNG = !d || !k, idKhach = "";
   var $ = function (id) { return document.getElementById(id); };
   function loi(m) { $("loi").textContent = m; $("loi").hidden = !m; }
   function tien(n) { return (Number(n) || 0).toLocaleString("en-US") + " kuai"; }
-  function goi(body) {
-    if (THU) return new Promise(function (ok) { setTimeout(function () { ok(body ? { ok: true, soDon: 1 } : { tenKhach: "Khách mẫu", kenh: "NỘI THẤT", mon: [{ mua: "Q68", tien: 850 }, { mua: "2 K12", tien: 600 }], daDien: false, coDiaChi: false, huy: false, daVaoFile: false }); }, 300); });
+  function goi(body, doc) {
+    if (THU) return new Promise(function (ok) { setTimeout(function () {
+      ok(body ? { ok: true, soDon: 1 } : doc && doc.action === "donTheoId" ? (/khong/.test(doc.id) ? { id: doc.id, tenKhach: "", mon: [] } : { id: doc.id, tenKhach: "Khách mẫu", mon: [{ mua: "Q68", tien: 850, kenh: "NỘI THẤT" }] })
+        : { tenKhach: "Khách mẫu", kenh: "NỘI THẤT", mon: [{ mua: "Q68", tien: 850 }, { mua: "2 K12", tien: 600 }], daDien: false, coDiaChi: false, huy: false, daVaoFile: false }); }, 300); });
     var p = body
       ? fetch(API, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(body) })
-      : fetch(API + "?" + new URLSearchParams({ action: "donKhach", d: d, k: k, t: Date.now() }), { credentials: "omit", cache: "no-store" });
+      : fetch(API + "?" + new URLSearchParams(Object.assign({ t: Date.now() }, doc || { action: "donKhach", d: d, k: k })), { credentials: "omit", cache: "no-store" });
     return p.then(function (r) { return r.json(); }).then(function (x) { if (!x.ok) throw new Error(x.error || "Có lỗi, chị thử lại giúp em."); return x.data; });
   }
   function chonDV(v) {
@@ -109,17 +119,45 @@ textarea { min-height:80px; resize:vertical }
   }
   document.querySelectorAll("#chonDV button").forEach(function (b) { b.onclick = function () { chonDV(b.dataset.v); }; });
 
-  if (!THU && (!d || !k)) { $("dangTai").hidden = true; loi("Link chưa đúng. Chị nhắn lại shop để lấy link mới giúp em nhé."); return; }
-  goi().then(function (x) {
-    $("dangTai").hidden = true;
-    $("chao").textContent = "Chị " + (x.tenKhach || "") + " ơi, shop " + (x.kenh || "608") + " xác nhận chị đã chốt:";
-    var ds = $("dsMon"), tong = 0;
-    x.mon.forEach(function (m) {
+  function veMon(ds0) {
+    var ds = $("dsMon"), tong = 0; ds.textContent = "";
+    ds0.forEach(function (m) {
       var r = document.createElement("div"); r.className = "mon";
       var a = document.createElement("span"); a.textContent = m.mua; var b = document.createElement("span"); b.textContent = tien(m.tien);
       r.appendChild(a); r.appendChild(b); ds.appendChild(r); tong += Number(m.tien) || 0;
     });
-    $("tong").textContent = tien(tong); $("khoiDon").hidden = false;
+    $("tong").textContent = tien(tong);
+  }
+
+  // ---- Link chung: gõ ID TikTok → xem món đã chốt (nếu shop đã lên đơn) → điền địa chỉ ----
+  if (CHUNG) {
+    $("dangTai").hidden = true; $("khoiId").hidden = false;
+    try { $("idTT").value = localStorage.getItem("608-idTT") || ""; } catch (e) {}
+    $("khoiId").onsubmit = function (e) {
+      e.preventDefault(); loi("");
+      var id = $("idTT").value.trim().replace(/^@/, "").toLowerCase();
+      if (!/^[a-z0-9._]{2,40}$/.test(id)) return loi("ID TikTok chưa đúng. ID là chữ sau dấu @ ở trang cá nhân TikTok (không dấu, không cách).");
+      $("timId").disabled = true; $("timId").textContent = "Đang tìm đơn…";
+      goi(null, { action: "donTheoId", id: id }).then(function (x) {
+        idKhach = x.id; try { localStorage.setItem("608-idTT", x.id); } catch (er) {}
+        $("khoiId").hidden = true;
+        if (x.mon.length) {
+          $("chao").textContent = "Chị " + (x.tenKhach || "@" + x.id) + " ơi, shop " + (x.mon[0].kenh || "608") + " xác nhận chị đã chốt:";
+          veMon(x.mon); $("khoiDon").hidden = false;
+        } else {
+          $("chao").textContent = "Shop đang ghi đơn của chị (@" + x.id + "). Chị cứ gửi địa chỉ trước, đơn lên xong sẽ tự có địa chỉ ạ.";
+          $("dsMon").textContent = ""; $("khoiDon").hidden = false;
+          $("khoiDon").querySelector(".tong").hidden = true; $("khoiDon").querySelector(".goi-y").hidden = true;
+        }
+        $("form").hidden = false;
+      }, function (er) { loi(er.message); }).finally(function () { $("timId").disabled = false; $("timId").textContent = "Tiếp tục"; });
+    };
+  }
+
+  if (!CHUNG) goi().then(function (x) {
+    $("dangTai").hidden = true;
+    $("chao").textContent = "Chị " + (x.tenKhach || "") + " ơi, shop " + (x.kenh || "608") + " xác nhận chị đã chốt:";
+    veMon(x.mon); $("khoiDon").hidden = false;
     if (x.huy) return loi("Đơn này đã hủy. Chị nhắn shop nếu cần đặt lại ạ.");
     if (x.daVaoFile) return loi("Shop đã lên đơn cho chị rồi ạ. Muốn đổi địa chỉ chị nhắn shop giúp em.");
     if (x.daDien) { $("xong").hidden = false; $("xong").querySelector("span").textContent = "Chị đã gửi địa chỉ rồi ạ. Muốn sửa thì điền lại bên dưới."; }
@@ -130,8 +168,9 @@ textarea { min-height:80px; resize:vertical }
     e.preventDefault(); loi("");
     if (!dv) return loi("Chị chọn nhận hàng ở 7-11, FamilyMart hay giao tận nhà giúp em.");
     $("gui").disabled = true; $("gui").textContent = "Đang gửi…";
-    goi({ action: "khachDien", d: d, k: k, ten: $("ten").value, sdt: $("sdt").value, dichVu: dv,
-      soCuaHang: $("soCH").value, tenCuaHang: $("tenCH").value, diaChiNha: $("nha").value, ghiChu: $("ghiChu").value })
+    var them = CHUNG ? { action: "khachDienChung", id: idKhach } : { action: "khachDien", d: d, k: k };
+    goi(Object.assign(them, { ten: $("ten").value, sdt: $("sdt").value, dichVu: dv,
+      soCuaHang: $("soCH").value, tenCuaHang: $("tenCH").value, diaChiNha: $("nha").value, ghiChu: $("ghiChu").value }))
       .then(function () { $("form").hidden = true; $("xong").hidden = false; $("xong").querySelector("span").textContent = "Cảm ơn chị! Shop sẽ gửi hàng và báo mã vận đơn sớm ạ."; window.scrollTo(0, 0); },
         function (er) { loi(er.message); })
       .finally(function () { $("gui").disabled = false; $("gui").textContent = "Gửi địa chỉ cho shop"; });
