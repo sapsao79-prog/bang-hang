@@ -299,6 +299,10 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   <div id="canhBaoBom" class="canh-bao" hidden></div>
   <div id="gopSua" class="gop" hidden></div>
   <div id="sGoc" class="trich" hidden></div>
+  <button type="button" id="sAnhDC" hidden style="border:0;padding:0;background:none;cursor:zoom-in;text-align:left">
+    <img id="sAnhDCImg" alt="Ảnh địa chỉ khách gửi" style="max-width:100%;max-height:260px;border-radius:10px;display:block">
+    <span class="phu">📷 Ảnh địa chỉ khách gửi – bấm để xem to, rồi ghi vào ô địa chỉ bên dưới</span>
+  </button>
   <div class="hai-cot">
     <label class="o-nhap">Tên khách (TikTok)<input id="sTen" autocomplete="off"></label>
     <label class="o-nhap">ID khách<input id="sId" autocomplete="off" placeholder="username"></label>
@@ -417,7 +421,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       ],
       don: [
         { ma: "D1", luc: new Date(t - 40 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG", nguoiLive: "Hằng", maHang: "K12", gia: 300, anh: "", tenKhach: "Khách mẫu A", idKhach: "khachmau.a", muaHang: "K12", phiShip: 0, tong: 300, diaChi: "09xx xxx xxx dc 123456 7-11", dichVu: "SEVEN", ghiChu: "", trangThai: DU, nguoiXuLy: "Như Ý", lucXuLy: "", maPhien: "P1", nick: "changa.hang1", binhLuan: "chốt k12 ạ", soBL: -1, nguon: "BÌNH LUẬN", khoaKhach: "mau00001", khachDien: new Date(t - 30 * 6e4).toISOString() },
-        { ma: "D2", luc: new Date(t - 20 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG 2", nguoiLive: "Hằng", maHang: "A01", gia: 650, anh: anhMau("A01"), tenKhach: "Khách mẫu B", idKhach: "khachmau.b", muaHang: "A01", phiShip: "", tong: 650, diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: "P2", nick: "changa.hang2", binhLuan: "cho em 1 cái A01", soBL: -2, nguon: "BÌNH LUẬN", khoaKhach: "mau00002", khachDien: "" }
+        { ma: "D2", luc: new Date(t - 20 * 6e4).toISOString(), ca: ca, kenh: "CHĂN GA HẰNG 2", nguoiLive: "Hằng", maHang: "A01", gia: 650, anh: anhMau("A01"), tenKhach: "Khách mẫu B", idKhach: "khachmau.b", muaHang: "A01", phiShip: "", tong: 650, diaChi: "", dichVu: "", ghiChu: "", trangThai: MOI, nguoiXuLy: "", lucXuLy: "", maPhien: "P2", nick: "changa.hang2", binhLuan: "cho em 1 cái A01", soBL: -2, nguon: "BÌNH LUẬN", khoaKhach: "mau00002", khachDien: new Date(t - 5 * 6e4).toISOString(), anhDiaChi: anhMau("ẢNH ĐC", "#fff6d8") }
       ],
       bom: [{ tenKhach: "Khách bom mẫu", idKhach: "bom.mau" }],
       khach: { "khachmau.a": [3, 0, 1], "khachmau.b": [1, 0, 0], "thuha": [6, 0, 1], "bom.mau": [1, 2, 0], "megun": [2, 0, 0] },
@@ -555,7 +559,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     var cuaToi = phienCuaToi(), k = $("dsNickToi"); k.textContent = "";
     // Nhắc người live đọc tên khách chưa gửi địa chỉ trên live
     var maP = cuaToi.map(function (p) { return p.maPhien; }), chua = {};
-    S.don.forEach(function (d) { if (maP.indexOf(d.maPhien) >= 0 && d.trangThai === MOI && !d.diaChi && d.tenKhach) chua[d.tenKhach] = 1; });
+    S.don.forEach(function (d) { if (maP.indexOf(d.maPhien) >= 0 && d.trangThai === MOI && !d.diaChi && !d.anhDiaChi && d.tenKhach) chua[d.tenKhach] = 1; });
     var ten = Object.keys(chua), nh = $("nhacLive"); nh.hidden = !ten.length; nh.textContent = "";
     if (ten.length) {
       nh.appendChild(el("b", "", "📢 " + ten.length + " khách chưa gửi địa chỉ – đọc tên trên live:"));
@@ -797,9 +801,14 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     ganNhan(kh, d.idKhach, [HUY, BOM].indexOf(d.trangThai) < 0 ? 1 : 0); t.appendChild(kh);
     if (d.binhLuan) t.appendChild(el("div", "trich", "💬 " + d.binhLuan));
     if (d.diaChi) t.appendChild(el("div", "phu", (d.dichVu ? d.dichVu + " · " : "") + d.diaChi));
-    if (d.khachDien) t.appendChild(el("div", "da-don", "✅ Khách tự điền địa chỉ lúc " + hh(d.khachDien)));
+    if (d.anhDiaChi) {
+      var xa = nut("nut-cham nut-nho", "📷 Xem ảnh địa chỉ khách gửi", function () { xemAnh(d.anhDiaChi); });
+      xa.style.justifySelf = "start"; t.appendChild(xa);
+      if (!d.diaChi) t.appendChild(el("div", "khach rong", "✍️ Xem ảnh rồi bấm Điền thông tin để ghi địa chỉ"));
+    }
+    if (d.khachDien) t.appendChild(el("div", "da-don", "✅ Khách tự gửi " + (d.diaChi ? "địa chỉ" : "ảnh địa chỉ") + " lúc " + hh(d.khachDien)));
     else if (d.ghiChu && /đơn trước/.test(d.ghiChu)) t.appendChild(el("div", "gop", "📍 Địa chỉ lấy từ đơn trước – hỏi lại khách còn đúng không"));
-    else if (!d.diaChi && [MOI, DU].indexOf(d.trangThai) >= 0) t.appendChild(el("div", "khach rong", "⏳ Chưa có địa chỉ"));
+    else if (!d.diaChi && !d.anhDiaChi && [MOI, DU].indexOf(d.trangThai) >= 0) t.appendChild(el("div", "khach rong", "⏳ Chưa có địa chỉ"));
     t.appendChild(el("div", "phu", hh(d.luc) + " · " + d.nguoiLive + " · @" + (d.nick || d.kenh)));
     if (laBom(d) && d.trangThai !== BOM) t.appendChild(el("div", "canh-bao", "⚠️ Khách này từng BOM hàng"));
     var g = cungKhach(d);
@@ -858,6 +867,8 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     dangSua = d; tongTay = false;
     $("tdSua").textContent = "#" + sttTrongCa(d) + " · " + d.maHang + " · " + hh(d.luc) + " · " + d.nguoiLive + " · @" + (d.nick || d.kenh);
     $("sGoc").hidden = !d.binhLuan; $("sGoc").textContent = "💬 " + d.binhLuan;
+    $("sAnhDC").hidden = !d.anhDiaChi;
+    if (d.anhDiaChi) { $("sAnhDCImg").src = linkAnh(d.anhDiaChi, 900); $("sAnhDC").onclick = function () { xemAnh(d.anhDiaChi); }; }
     $("sTen").value = d.tenKhach; $("sId").value = d.idKhach; $("sMua").value = d.muaHang || d.maHang;
     $("sGia").value = d.gia; $("sShip").value = d.phiShip == null ? "" : d.phiShip;
     $("sTong").value = d.tong == null || d.tong === "" ? d.gia : d.tong;
