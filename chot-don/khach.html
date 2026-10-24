@@ -36,6 +36,14 @@ textarea { min-height:80px; resize:vertical }
 .loi { background:var(--do-100); color:#a51e24; border-radius:10px; padding:10px 12px; font-weight:700 }
 .xong { background:var(--xanh-100); color:var(--xanh); border-radius:14px; padding:20px 16px; text-align:center; font-weight:800; display:grid; gap:6px }
 .xong b { font-size:22px }
+.khung-anh { display:grid; gap:8px }
+.khung-anh input { position:absolute; width:1px; height:1px; opacity:0; min-height:0; padding:0; border:0 }
+.nut-anh { display:grid; place-items:center; min-height:60px; border-radius:14px; border:2px dashed var(--cham); background:var(--cham-100); color:var(--cham); font-size:18px; font-weight:900; cursor:pointer; text-align:center; padding:6px }
+.xem-anh { position:relative; border-radius:12px; overflow:hidden; background:#0001 }
+.xem-anh img { width:100%; max-height:360px; object-fit:contain; display:block }
+.xem-anh button { position:absolute; top:8px; right:8px; border:0; border-radius:999px; background:rgba(0,0,0,.7); color:#fff; font:inherit; font-size:14px; font-weight:800; padding:6px 12px; cursor:pointer }
+.hoac { text-align:center; font-size:13px; font-weight:800; color:var(--chu-phu); display:flex; align-items:center; gap:10px }
+.hoac::before, .hoac::after { content:""; flex:1; border-top:1px solid var(--vien) }
 [hidden] { display:none !important }
 :focus-visible { outline:2px solid var(--cham); outline-offset:2px }
 </style>
@@ -62,8 +70,15 @@ textarea { min-height:80px; resize:vertical }
   </section>
 
   <form class="khoi" id="form" hidden>
-    <label>Tên người nhận<input id="ten" autocomplete="name" required></label>
-    <label>Số điện thoại (Đài Loan)<input id="sdt" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxx" required></label>
+    <div class="khung-anh">
+      <label class="nut-anh" for="anhDC">📷 Gửi ẢNH địa chỉ (nhanh nhất)</label>
+      <input type="file" id="anhDC" accept="image/*">
+      <div class="goi-y">Chụp hoặc chọn ảnh có tên, SĐT, cửa hàng 7-11 / FamilyMart nhận hàng. Gửi ảnh rồi thì các ô bên dưới <b>không bắt buộc</b>.</div>
+      <div class="xem-anh" id="xemAnh" hidden><img id="anhXem" alt="Ảnh địa chỉ"><button type="button" id="boAnh">✕ Bỏ ảnh</button></div>
+    </div>
+    <div class="hoac">hoặc gõ tay</div>
+    <label>Tên người nhận<input id="ten" autocomplete="name"></label>
+    <label>Số điện thoại (Đài Loan)<input id="sdt" inputmode="tel" autocomplete="tel" placeholder="09xx xxx xxx"></label>
     <div style="display:grid;gap:6px">
       <span style="font-size:14px;font-weight:800;color:var(--chu-phu)">Nhận hàng ở đâu?</span>
       <div class="chon" id="chonDV">
@@ -164,12 +179,39 @@ textarea { min-height:80px; resize:vertical }
     $("form").hidden = false;
   }, function (e) { $("dangTai").hidden = true; loi(e.message); });
 
+  // ---- Ảnh địa chỉ: thu nhỏ còn cạnh dài 1600px (vẫn đọc rõ chữ), JPEG ~200–400KB ----
+  var anh = null;
+  function thuNho(f) {
+    return new Promise(function (ok, no) {
+      var img = new Image(), url = URL.createObjectURL(f);
+      img.onload = function () {
+        var tl = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        var c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * tl); c.height = Math.round(img.naturalHeight * tl);
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok({ ten: "dia-chi.jpg", kieu: "image/jpeg", duLieu: c.toDataURL("image/jpeg", 0.85).split(",")[1] });
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); no(new Error("Không đọc được ảnh, chị chọn ảnh khác giúp em.")); };
+      img.src = url;
+    });
+  }
+  $("anhDC").onchange = function () {
+    var f = this.files && this.files[0]; if (!f) return;
+    loi(""); thuNho(f).then(function (a) {
+      anh = a; $("anhXem").src = "data:image/jpeg;base64," + a.duLieu; $("xemAnh").hidden = false;
+      document.querySelector(".nut-anh").textContent = "📷 Đổi ảnh khác";
+    }, function (er) { loi(er.message); });
+  };
+  $("boAnh").onclick = function () { anh = null; $("anhDC").value = ""; $("xemAnh").hidden = true; document.querySelector(".nut-anh").textContent = "📷 Gửi ẢNH địa chỉ (nhanh nhất)"; };
+
   $("form").onsubmit = function (e) {
     e.preventDefault(); loi("");
-    if (!dv) return loi("Chị chọn nhận hàng ở 7-11, FamilyMart hay giao tận nhà giúp em.");
-    $("gui").disabled = true; $("gui").textContent = "Đang gửi…";
+    if (!anh) {
+      if (!$("ten").value.trim() || !$("sdt").value.trim()) return loi("Chị gửi ảnh địa chỉ, hoặc ghi tên + số điện thoại giúp em.");
+      if (!dv) return loi("Chị chọn nhận hàng ở 7-11, FamilyMart hay giao tận nhà giúp em.");
+    }
+    $("gui").disabled = true; $("gui").textContent = anh ? "Đang gửi ảnh…" : "Đang gửi…";
     var them = CHUNG ? { action: "khachDienChung", id: idKhach } : { action: "khachDien", d: d, k: k };
-    goi(Object.assign(them, { ten: $("ten").value, sdt: $("sdt").value, dichVu: dv,
+    goi(Object.assign(them, { anh: anh, ten: $("ten").value, sdt: $("sdt").value, dichVu: dv,
       soCuaHang: $("soCH").value, tenCuaHang: $("tenCH").value, diaChiNha: $("nha").value, ghiChu: $("ghiChu").value }))
       .then(function () { $("form").hidden = true; $("xong").hidden = false; $("xong").querySelector("span").textContent = "Cảm ơn chị! Shop sẽ gửi hàng và báo mã vận đơn sớm ạ."; window.scrollTo(0, 0); },
         function (er) { loi(er.message); })
