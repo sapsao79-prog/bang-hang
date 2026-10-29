@@ -63,6 +63,8 @@ main { max-width:1100px; margin:0 auto; padding:16px 16px 110px; display:grid; g
 .nut-ban { flex:1; background:#c22826; color:#fff }
 .nut-giao { flex:1; background:var(--cham-600); color:#fff }
 .nut-phu { background:transparent; color:var(--chu); border:1.5px solid var(--vien-dam) }
+a.nut { display:inline-flex; align-items:center; justify-content:center; text-decoration:none }
+.nut-luu { background:var(--cham-100); color:var(--cham-700); border:1.5px solid var(--cham-600) }
 .nut-nho { min-height:36px; padding:0 10px; font-size:13px }
 .the.da-ban { border-color:#c22826 }
 .trong { padding:40px 20px; text-align:center; color:var(--chu-phu); display:grid; gap:6px; justify-items:center; grid-column:1 / -1; background:var(--mat); border:1px dashed var(--vien-dam); border-radius:14px }
@@ -165,8 +167,8 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   <div class="phan-tabs" id="phanTabs" role="group" aria-label="Chọn phần ảnh"></div>
   <section class="thong-ke" aria-label="Tồn kho và doanh số">
     <div class="o-tk ton"><span>Tồn kho còn</span><b id="tkTon">0 chiếc</b><small id="tkTonChiTiet"></small></div>
-    <div class="o-tk nay"><span>Bán hôm nay</span><b id="tkNayTien">0 đ</b><small id="tkNaySo">0 chiếc</small></div>
-    <div class="o-tk thang"><span id="tkThangTen">Doanh số tháng</span><b id="tkThangTien">0 đ</b><small id="tkThangSo">0 chiếc</small></div>
+    <div class="o-tk nay"><span>Bán hôm nay</span><b id="tkNayTien">0 kuai</b><small id="tkNaySo">0 chiếc</small></div>
+    <div class="o-tk thang"><span id="tkThangTen">Doanh số tháng</span><b id="tkThangTien">0 kuai</b><small id="tkThangSo">0 chiếc</small></div>
   </section>
   <details class="ds-nguoi" id="dsNguoi">
     <summary>Doanh số theo người bán</summary>
@@ -271,6 +273,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       <button class="nut nut-phu nut-nho" type="button" id="anhTruoc">‹ Trước</button>
       <span id="soThuTu" class="phu"></span>
       <button class="nut nut-phu nut-nho" type="button" id="anhSau">Sau ›</button>
+      <a class="nut nut-luu nut-nho" id="taiAnhTo" target="_blank" rel="noopener" download>⬇ Lưu ảnh</a>
       <button class="nut nut-phu nut-nho" type="button" id="dongXem">Đóng ✕</button>
     </div>
   </div>
@@ -314,6 +317,8 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   }
   function ganDocTien(o, hien) { o.oninput = function () { var n = docTien(o.value); hien.textContent = o.value.trim() ? (n ? "= " + tien(n) : "Chưa hiểu số tiền này") : ""; }; o.oninput(); }
   // id Drive → link ảnh thu nhỏ; ảnh mẫu (mau/…) hoặc ảnh đang chạy thử (data:/blob:) dùng thẳng
+  // Link tải ảnh gốc (Drive trả về file để điện thoại lưu về máy)
+  function linkTai(id) { return /^(data|blob):|\//.test(id) ? id : "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(id); }
   function linkAnh(id, rong) { return /^(data|blob):|\//.test(id) ? id : "https://drive.google.com/thumbnail?id=" + encodeURIComponent(id) + "&sz=w" + (rong || 800); }
 
   // ---- Gọi máy chủ (Apps Script). Đọc bằng GET, ghi bằng POST text/plain để không bị chặn CORS ----
@@ -556,6 +561,13 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       }));
     }
     hang.appendChild(nut("nut nut-phu nut-nho", "Sửa", m, function () { moSua(m); }));
+    // 1 ảnh: tải thẳng; nhiều ảnh: mở xem to để lưu từng ảnh
+    if (m.anh.length === 1) {
+      var tai = el("a", "nut nut-luu nut-nho", "⬇ Lưu ảnh"); tai.href = linkTai(m.anh[0]); tai.target = "_blank"; tai.rel = "noopener"; tai.setAttribute("download", "");
+      hang.appendChild(tai);
+    } else {
+      hang.appendChild(nut("nut nut-luu nut-nho", "⬇ Lưu " + m.anh.length + " ảnh", m, function () { xemAnh(m.anh, 0); }));
+    }
     than.appendChild(hang);
     d.appendChild(than);
     return d;
@@ -631,6 +643,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function xemAnh(ds, i) { dsXem = ds; viTri = i; veXem(); $("hopXem").showModal(); }
   function veXem() {
     $("anhTo").src = linkAnh(dsXem[viTri], 1600);
+    $("taiAnhTo").href = linkTai(dsXem[viTri]);
     $("soThuTu").textContent = dsXem.length > 1 ? (viTri + 1) + " / " + dsXem.length : "";
     $("anhTruoc").hidden = $("anhSau").hidden = dsXem.length < 2;
   }
