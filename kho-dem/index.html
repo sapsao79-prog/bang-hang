@@ -246,6 +246,24 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   </form>
 </dialog>
 
+<dialog id="hopDoiNgay">
+  <form class="hop" method="dialog">
+    <h2>📅 Đổi ngày giao</h2>
+    <div class="hen-giao" id="doiHienTai"></div>
+    <div class="chon">
+      <button class="nut nut-phu nut-nho" type="button" data-ngay="nay">Hôm nay</button>
+      <button class="nut nut-phu nut-nho" type="button" data-ngay="mai">Ngày mai</button>
+    </div>
+    <label class="o-nhap">Ngày giao mới<input class="o-tien" type="date" id="doiNgay"></label>
+    <label class="o-nhap">Ghi chú giao (giờ hẹn, khu vực…)<input class="o-tien" id="doiGhiChu" autocomplete="off"></label>
+    <div class="doc-tien" id="doiBao"></div>
+    <div class="chan-hop">
+      <button class="nut nut-phu" type="button" id="huyDoi">Hủy</button>
+      <button class="nut nut-giao" type="button" id="luuDoi">Lưu ngày mới</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog id="hopSua">
   <form class="hop" method="dialog">
     <h2>Sửa mẫu đệm</h2>
@@ -351,10 +369,16 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
         var bay = new Date().toISOString(), x = kho.find(function (m) { return m.ma === q.ma; });
         if (q.action === "list") return ok(JSON.parse(JSON.stringify({
           mau: kho.filter(function (m) { return m.trangThai !== DA_GIAO && m.trangThai !== DANG_NHAM; }),
+          vuaGiao: kho.filter(function (m) { return m.trangThai === DA_GIAO; }),
           daBan: kho.filter(function (m) { return m.trangThai === DA_BAN || m.trangThai === DA_GIAO; }).map(function (m) { return { phan: m.phan, muc: m.muc, nguoiBan: m.nguoiBan, lucBan: m.lucBan, giaBan: m.giaBan, trangThai: m.trangThai, nguoiGiao: m.nguoiGiao || "", lucGiao: m.lucGiao || "", thuBang: m.thuBang || "", daThu: m.daThu == null ? null : m.daThu }; })
         })));
         if (q.action === "dang") { var m = { ma: "D" + Date.now() + Math.floor(Math.random() * 900), phan: q.phan, muc: q.muc, ghiChu: q.ghiChu, anh: q.anh.map(function (a) { return "data:" + a.kieu + ";base64," + a.duLieu; }), trangThai: CON, nguoiDang: q.nguoi, lucDang: bay, nguoiBan: "", lucBan: "" }; kho.push(m); return ok({ ma: m.ma }); }
         if (!x) return loi(new Error("Không tìm thấy mẫu " + q.ma));
+        if (q.action === "trangThai" && q.traLaiGiao) {
+          if (x.trangThai !== DA_GIAO) return loi(new Error("Chiếc này chưa ở trạng thái Đã giao."));
+          x.trangThai = DA_BAN; x.nguoiGiao = ""; x.lucGiao = ""; x.thuBang = ""; x.daThu = null;
+          return ok({ ma: x.ma, trangThai: DA_BAN });
+        }
         if (q.action === "trangThai") {
           if (q.trangThai === DA_BAN && x.trangThai !== CON) return loi(new Error("Chiếc này đã có người bán rồi (" + x.nguoiBan + ")."));
           if (q.trangThai === DA_GIAO && x.trangThai !== DA_BAN) return loi(new Error("Chiếc này chưa được đánh dấu bán, chưa giao được."));
@@ -482,14 +506,15 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     var thu = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"][d.getDay()];
     return thu + " " + d.getDate() + "/" + (d.getMonth() + 1) + (s < n ? " (TRỄ HẸN)" : "");
   }
-  var LICH = [["tre", "Trễ hẹn"], ["nay", "Hôm nay"], ["mai", "Ngày mai"], ["sau", "Ngày sau"]];
-  var locGiao = "";
+  // "tatca" = mọi chiếc đã bán chờ giao (tìm lại nhanh khi khách hủy / đổi ngày); "vuagiao" = giao trong 7 ngày (trả lại nếu bấm nhầm)
+  var LICH = [["tre", "Trễ hẹn"], ["nay", "Hôm nay"], ["mai", "Ngày mai"], ["sau", "Ngày sau"], ["tatca", "Tất cả đã bán"], ["vuagiao", "↩ Vừa giao"]];
+  var locGiao = "", vuaGiao = [];
   function veLich() {
     var choGiao = mau.filter(function (m) { return m.trangThai === DA_BAN; });
     var k = $("lichNut"); k.textContent = "";
     LICH.forEach(function (p) {
-      var so = choGiao.filter(function (m) { return nhomHen(m) === p[0]; }).length;
-      if (p[0] === "tre" && !so) return;
+      var so = p[0] === "tatca" ? choGiao.length : p[0] === "vuagiao" ? vuaGiao.length : choGiao.filter(function (m) { return nhomHen(m) === p[0]; }).length;
+      if ((p[0] === "tre" || p[0] === "vuagiao") && !so) return;
       var b = el("button", p[0] === "tre" ? "tre" : "", p[1] + " (" + so + ")"); b.type = "button";
       b.setAttribute("aria-pressed", String(locGiao === p[0]));
       b.onclick = function () { locGiao = locGiao === p[0] ? "" : p[0]; ve(); };
@@ -499,7 +524,8 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     // Đang xem lịch giao thì ẩn bớt phần kho/doanh số cho lái xe đỡ phải cuộn
     ["phanTabs", "dsNguoi"].forEach(function (id) { $(id).hidden = !!locGiao; });
     document.querySelector(".thong-ke").hidden = document.querySelector(".cong-cu").hidden = !!locGiao;
-    if (locGiao) $("chuLocGiao").textContent = "Đang xem chiếc cần giao: " + LICH.filter(function (p) { return p[0] === locGiao; })[0][1] + " (cả ảnh công ty và CTV)";
+    if (locGiao === "vuagiao") $("chuLocGiao").textContent = "Chiếc đã giao trong 7 ngày – bấm “Giao nhầm – trả lại” nếu chưa giao thật";
+    else if (locGiao) $("chuLocGiao").textContent = "Đang xem: " + LICH.filter(function (p) { return p[0] === locGiao; })[0][1] + " (cả ảnh công ty và CTV)";
   }
   $("boLocGiao").onclick = function () { locGiao = ""; ve(); };
 
@@ -509,12 +535,13 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     var an = $("anDaBan").checked, ds;
     if (locGiao) {
       // Lịch giao: gom mọi chiếc đã bán theo ngày hẹn, không phân biệt phần / mức giá
-      ds = mau.filter(function (m) { return m.trangThai === DA_BAN && nhomHen(m) === locGiao; });
+      ds = locGiao === "vuagiao" ? vuaGiao.slice().sort(function (a, b) { return String(b.lucGiao).localeCompare(String(a.lucGiao)); })
+        : mau.filter(function (m) { return m.trangThai === DA_BAN && (locGiao === "tatca" || nhomHen(m) === locGiao); });
     } else {
       ds = mau.filter(function (m) { return trongPhan(m) && (!muc || m.muc === muc) && !(an && m.trangThai === DA_BAN); });
     }
     // Chiếc còn lên trước (mới nhất trước); chiếc đã bán xuống cuối, ngày giao sớm nhất trước
-    ds.sort(function (a, b) {
+    if (locGiao !== "vuagiao") ds.sort(function (a, b) {
       var ta = a.trangThai === CON ? 0 : 1, tb = b.trangThai === CON ? 0 : 1;
       if (ta !== tb) return ta - tb;
       if (ta === 1) return henCua(a).localeCompare(henCua(b)) || String(a.lucBan).localeCompare(String(b.lucBan));
@@ -530,6 +557,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   }
 
   function veThe(m) {
+    if (m.trangThai === DA_GIAO) return veTheDaGiao(m);
     var daBan = m.trangThai === DA_BAN;
     var d = el("article", "the" + (daBan ? " da-ban" : ""));
     var khung = el("button", "khung-anh"); khung.type = "button"; khung.setAttribute("aria-label", "Phóng to ảnh");
@@ -554,9 +582,10 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       hang.appendChild(nut("nut nut-ban", "✓ Đã bán", m, function () { moBan(m); }));
     } else {
       hang.appendChild(nut("nut nut-giao", "🚚 Đã giao xong", m, function () { moGiao(m); }));
-      hang.appendChild(nut("nut nut-phu nut-nho", "Bán nhầm", m, function () {
+      hang.appendChild(nut("nut nut-phu nut-nho", "📅 Đổi ngày giao", m, function () { moDoiNgay(m); }));
+      hang.appendChild(nut("nut nut-phu nut-nho", "↩ Khách hủy", m, function () {
         var ten = canTen(); if (!ten) return;
-        if (!confirm("Mở bán lại chiếc này (bán nhầm)?")) return;
+        if (!confirm("Khách hủy / bán nhầm chiếc này?\nĐệm sẽ mở bán lại (hết chữ HẾT), giá bán và ngày giao bị xóa.")) return;
         doiTT(m, CON, ten);
       }));
     }
@@ -572,6 +601,52 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     d.appendChild(than);
     return d;
   }
+  // Thẻ chiếc đã giao (chỉ hiện trong mục "Vừa giao"): xem lại và trả về nếu bấm giao nhầm
+  function veTheDaGiao(m) {
+    var d = el("article", "the");
+    var khung = el("button", "khung-anh"); khung.type = "button"; khung.setAttribute("aria-label", "Phóng to ảnh");
+    var img = el("img"); img.loading = "lazy"; img.alt = m.ghiChu || "Ảnh đệm"; img.src = linkAnh(m.anh[0], 600);
+    khung.appendChild(img); khung.appendChild(el("span", "nhan-muc", "ĐÃ GIAO"));
+    khung.onclick = function () { xemAnh(m.anh, 0); };
+    d.appendChild(khung);
+    var than = el("div", "than");
+    than.appendChild(el("div", "ghi-chu-sp" + (m.ghiChu ? "" : " rong"), m.ghiChu || "Chưa có ghi chú"));
+    than.appendChild(el("div", "ban-boi", "Bán: " + (m.nguoiBan || "?") + (m.giaBan ? " · " + tien(m.giaBan) : "")));
+    than.appendChild(el("div", "phu", "Giao: " + (m.nguoiGiao || "?") + " · " + gio(m.lucGiao) + (m.thuBang ? " · " + m.thuBang : "")));
+    var hang = el("div", "hang-nut");
+    hang.appendChild(nut("nut nut-giao", "↩ Giao nhầm – trả lại", m, function () {
+      var ten = canTen(); if (!ten) return;
+      if (!confirm("Chiếc này CHƯA giao thật?\nĐệm sẽ quay lại mục Đã bán (chữ HẾT), xóa phần giao và thu tiền.")) return;
+      dangBam[m.ma] = true; ve();
+      goi({ action: "trangThai", ma: m.ma, trangThai: DA_BAN, nguoi: ten, traLaiGiao: true }).then(function () { baoLoi(""); locGiao = "tatca"; return taiLai(); },
+        function (e) { baoLoi("Chưa trả lại được: " + ((e && e.message) || e)); })
+        .then(function () { delete dangBam[m.ma]; ve(); });
+    }));
+    than.appendChild(hang);
+    d.appendChild(than);
+    return d;
+  }
+
+  // ---- Đổi ngày giao (khách muốn lấy sớm hơn / muộn hơn) ----
+  var dangDoi = null;
+  function moDoiNgay(m) {
+    dangDoi = m;
+    $("doiHienTai").textContent = "Đang hẹn: " + chuNgay(henCua(m)) + (m.ghiChuGiao ? " · " + m.ghiChuGiao : "");
+    $("doiNgay").value = henCua(m); $("doiGhiChu").value = m.ghiChuGiao || ""; $("doiBao").textContent = "";
+    $("hopDoiNgay").showModal();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-ngay]"), function (b) {
+    b.onclick = function () { $("doiNgay").value = this.dataset.ngay === "nay" ? homNay() : ngayMai(); };
+  });
+  $("huyDoi").onclick = function () { $("hopDoiNgay").close(); };
+  $("luuDoi").onclick = function () {
+    var m = dangDoi, q = { action: "sua", ma: m.ma, henGiao: $("doiNgay").value, ghiChuGiao: $("doiGhiChu").value.trim() };
+    if (!q.henGiao) { $("doiBao").textContent = "Chọn ngày giao mới."; return; }
+    $("hopDoiNgay").close(); dangBam[m.ma] = true; ve();
+    goi(q).then(function () { m.henGiao = q.henGiao; m.ghiChuGiao = q.ghiChuGiao; baoLoi(""); return taiLai(); }, function (e) { baoLoi("Chưa đổi được ngày: " + ((e && e.message) || e)); })
+      .then(function () { delete dangBam[m.ma]; ve(); });
+  };
+
   function nut(c, chu, m, bam) { var b = el("button", c, chu); b.type = "button"; b.disabled = !!dangBam[m.ma]; b.onclick = bam; return b; }
 
   // ---- Bán: bắt buộc ghi giá bán ----
@@ -770,6 +845,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       ds.forEach(function (x) { if (!Array.isArray(x.anh)) x.anh = []; });
       mau = ds.filter(function (x) { return x.anh.length; });
       daBan = kq.daBan || [];
+      vuaGiao = (kq.vuaGiao || []).filter(function (x) { return Array.isArray(x.anh) && x.anh.length; });
       songKetNoi(true, (THU ? "CHẠY THỬ · " : "Đang trực tuyến · ") + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }));
       ve();
     }, function (e) { songKetNoi(false, "Mất kết nối, đang thử lại…"); baoLoi("Không tải được ảnh: " + ((e && e.message) || e)); });
