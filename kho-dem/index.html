@@ -312,6 +312,14 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function nho(k, v) {
     try { if (v === undefined) return localStorage.getItem("khodem-" + k); localStorage.setItem("khodem-" + k, v); } catch (e) { return null; }
   }
+
+  // Quyền xem: link thường = bản cộng tác viên (chỉ thấy ảnh CTV). Nhân viên công ty mở link có "#k=<mã>" một lần,
+  // máy nhớ mã → lần sau mở link thường vẫn thấy cả ảnh công ty. Máy chủ kiểm tra mã, trang này chỉ ẩn bớt nút.
+  var KHOA = (location.hash.match(/[#&]k=([a-z0-9]+)/) || [])[1] || "";
+  if (KHOA) { nho("khoa", KHOA); try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {} }
+  else KHOA = nho("khoa") || "";
+  var quyen = THU && !/[?&]ctv=1/.test(location.search) ? "congty" : "";
+  function dsPhan() { return quyen === "congty" ? PHAN : PHAN.filter(function (p) { return p[0] === "Cộng tác viên"; }); }
   function el(t, c, x) { var e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; }
   function baoLoi(m) { $("loi").textContent = m; $("loi").hidden = !m; }
   function songKetNoi(ok, chu) { $("chamSong").classList.toggle("tat", !ok); $("trangThai").textContent = chu; }
@@ -339,14 +347,12 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function linkTai(id) { return /^(data|blob):|\//.test(id) ? id : "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(id); }
   function linkAnh(id, rong) { return /^(data|blob):|\//.test(id) ? id : "https://drive.google.com/thumbnail?id=" + encodeURIComponent(id) + "&sz=w" + (rong || 800); }
 
-  // ---- Gọi máy chủ (Apps Script). Đọc bằng GET, ghi bằng POST text/plain để không bị chặn CORS ----
+  // ---- Gọi máy chủ (Apps Script). Gửi POST text/plain để không bị chặn CORS; mã công ty đi trong thân, không nằm trên link ----
   function goi(q) {
     if (THU) return thuGoi(q);
     var doc = q.action === "list";
     function thu(lan) {
-      var p = doc
-        ? fetch(API + "?action=list&t=" + Date.now(), { credentials: "omit", cache: "no-store" })
-        : fetch(API, { method: "POST", credentials: "omit", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(q) });
+      var p = fetch(API, { method: "POST", credentials: "omit", cache: "no-store", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ khoa: KHOA }, q)) });
       return p.then(function (r) { if (!r.ok) throw new Error("Máy chủ trả lỗi " + r.status); return r.json(); })
         .catch(function (e) {
           // Chỉ tự thử lại khi đọc; ghi mà thử lại có thể đăng trùng ảnh
@@ -367,10 +373,14 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     return new Promise(function (ok, loi) {
       setTimeout(function () {
         var bay = new Date().toISOString(), x = kho.find(function (m) { return m.ma === q.ma; });
+        // Chạy thử bản CTV: thêm ?ctv=1 vào link
+        var ctvThu = /[?&]ctv=1/.test(location.search), loc = function (m) { return !ctvThu || m.phan === "Cộng tác viên"; };
+        if (q.action !== "list" && q.action !== "dang" && ctvThu && !loc(x || {})) return loi(new Error("Link cộng tác viên chỉ dùng được với ảnh phần Cộng tác viên."));
         if (q.action === "list") return ok(JSON.parse(JSON.stringify({
-          mau: kho.filter(function (m) { return m.trangThai !== DA_GIAO && m.trangThai !== DANG_NHAM; }),
-          vuaGiao: kho.filter(function (m) { return m.trangThai === DA_GIAO; }),
-          daBan: kho.filter(function (m) { return m.trangThai === DA_BAN || m.trangThai === DA_GIAO; }).map(function (m) { return { phan: m.phan, muc: m.muc, nguoiBan: m.nguoiBan, lucBan: m.lucBan, giaBan: m.giaBan, trangThai: m.trangThai, nguoiGiao: m.nguoiGiao || "", lucGiao: m.lucGiao || "", thuBang: m.thuBang || "", daThu: m.daThu == null ? null : m.daThu }; })
+          quyen: ctvThu ? "ctv" : "congty",
+          mau: kho.filter(loc).filter(function (m) { return m.trangThai !== DA_GIAO && m.trangThai !== DANG_NHAM; }),
+          vuaGiao: kho.filter(loc).filter(function (m) { return m.trangThai === DA_GIAO; }),
+          daBan: kho.filter(loc).filter(function (m) { return m.trangThai === DA_BAN || m.trangThai === DA_GIAO; }).map(function (m) { return { phan: m.phan, muc: m.muc, nguoiBan: m.nguoiBan, lucBan: m.lucBan, giaBan: m.giaBan, trangThai: m.trangThai, nguoiGiao: m.nguoiGiao || "", lucGiao: m.lucGiao || "", thuBang: m.thuBang || "", daThu: m.daThu == null ? null : m.daThu }; })
         })));
         if (q.action === "dang") { var m = { ma: "D" + Date.now() + Math.floor(Math.random() * 900), phan: q.phan, muc: q.muc, ghiChu: q.ghiChu, anh: q.anh.map(function (a) { return "data:" + a.kieu + ";base64," + a.duLieu; }), trangThai: CON, nguoiDang: q.nguoi, lucDang: bay, nguoiBan: "", lucBan: "" }; kho.push(m); return ok({ ma: m.ma }); }
         if (!x) return loi(new Error("Không tìm thấy mẫu " + q.ma));
@@ -413,7 +423,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function trongPhan(m) { return m.phan === phan; }
   function veTabs() {
     var k = $("phanTabs"); k.textContent = "";
-    PHAN.forEach(function (p) {
+    dsPhan().forEach(function (p) {
       var con = mau.filter(function (m) { return m.phan === p[0] && m.trangThai === CON; }).length;
       var b = el("button", "phan-tab", p[1] + " (" + con + ")"); b.type = "button";
       b.setAttribute("aria-pressed", String(phan === p[0]));
@@ -739,7 +749,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   $("moDang").onclick = function () {
     if (!canTen()) return;
     anhChon = []; veXemTruoc(); $("ghiChuDang").value = ""; $("cungChiec").checked = false; $("tienDo").hidden = true;
-    veLuaChon($("chonPhan"), "phan", PHAN, phan);
+    veLuaChon($("chonPhan"), "phan", dsPhan(), phan);
     veLuaChon($("chonMuc"), "muc", MUC.map(function (x) { return [x, x]; }), muc || "");
     $("guiDang").disabled = false;
     $("hopDang").showModal();
@@ -809,7 +819,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
   function veSelect(s, ds, chon) { s.textContent = ""; ds.forEach(function (p) { var o = el("option", null, p[1]); o.value = p[0]; o.selected = p[0] === chon; s.appendChild(o); }); }
   function moSua(m) {
     dangSua = m;
-    veSelect($("suaPhan"), PHAN, m.phan); veSelect($("suaMuc"), MUC.map(function (x) { return [x, x]; }), m.muc);
+    veSelect($("suaPhan"), dsPhan(), m.phan); veSelect($("suaMuc"), MUC.map(function (x) { return [x, x]; }), m.muc);
     $("suaGhiChu").value = m.ghiChu || "";
     var daBan1 = m.trangThai === DA_BAN;
     $("khungSuaGia").hidden = $("suaDoc").hidden = !daBan1;
@@ -845,8 +855,11 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       ds.forEach(function (x) { if (!Array.isArray(x.anh)) x.anh = []; });
       mau = ds.filter(function (x) { return x.anh.length; });
       daBan = kq.daBan || [];
+      // Bản CTV: chỉ còn phần Cộng tác viên
+      quyen = kq.quyen === "ctv" ? "ctv" : "congty";
+      if (quyen === "ctv") phan = "Cộng tác viên";
       vuaGiao = (kq.vuaGiao || []).filter(function (x) { return Array.isArray(x.anh) && x.anh.length; });
-      songKetNoi(true, (THU ? "CHẠY THỬ · " : "Đang trực tuyến · ") + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }));
+      songKetNoi(true, (THU ? "CHẠY THỬ · " : "") + (quyen === "ctv" ? "Bản cộng tác viên · " : "Đang trực tuyến · ") + new Date().toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }));
       ve();
     }, function (e) { songKetNoi(false, "Mất kết nối, đang thử lại…"); baoLoi("Không tải được ảnh: " + ((e && e.message) || e)); });
   }
