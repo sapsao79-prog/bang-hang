@@ -267,7 +267,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
     <ol style="margin:6px 0 0;padding-left:20px">
       <li><b>Người live:</b> gõ tên → tab Live → tích các nick sắp live → <b>Bắt đầu live</b>. Mỗi nick gõ <b>mã + giá đang bán</b> → Đặt mã. Chăn không mã: gõ giá → <b>📸 Chăn không mã</b> → chụp → app cấp mã A01, A02… đọc cho khách.</li>
       <li><b>Sale:</b> tab Bình luận → bình luận có ý mua tô đỏ → bấm <b>＋ Lên đơn</b> (tự lấy tên, ID khách, mã đang bán của đúng nick). Tab Đơn → điền SĐT, cửa hàng → Copy dán vào ĐƠN CHĂN.</li>
-      <li>Hết live bấm <b>Kết thúc live</b> → tab Tổng kết có giờ live, số đơn, doanh thu từng người.</li>
+      <li>Hết live bấm <b>Kết thúc live</b> → tab Tổng kết có giờ live, số đơn, doanh thu từng người. Quên bấm thì app tự kết thúc: khi TikTok báo hết live, hoặc 60 phút không có bình luận (6 giờ không có đơn nếu máy nghe tắt).</li>
       <li>Bình luận chỉ chạy khi <b>máy nghe</b> ở công ty đang bật. Máy nghe tắt thì vẫn chốt tay được.</li>
     </ol>
   </details>
@@ -1062,7 +1062,7 @@ dialog::backdrop { background:rgba(20,18,40,.6) }
       veBang($("bangNguoi"), ["Người live", "Giờ live", "Đơn", "Doanh thu", "Đơn/giờ"], r.nguoi.map(hang), ["Tổng", "", String(tong.don), tien(tong.dt), ""]);
       veBang($("bangNick"), ["Nick", "Giờ live", "Đơn", "Doanh thu", "Đơn/giờ"], r.nick.map(function (x) { var h = hang(x); h[0] = "@" + h[0]; return h; }));
       veBang($("bangPhien"), ["Nick", "Người", "Bắt đầu", "Kết thúc"], r.phien.sort(function (a, b) { return a.batDau < b.batDau ? 1 : -1; }).map(function (p) {
-        return ["@" + p.nick, p.nguoi, hh(p.batDau) + " " + new Date(p.batDau).getDate() + "/" + (new Date(p.batDau).getMonth() + 1), p.ketThuc ? hh(p.ketThuc) : "đang live"];
+        return ["@" + p.nick, p.nguoi, hh(p.batDau) + " " + new Date(p.batDau).getDate() + "/" + (new Date(p.batDau).getMonth() + 1), p.ketThuc ? hh(p.ketThuc) + (/^TỰ KẾT THÚC/.test(p.mayNghe || "") ? " (tự kết thúc)" : "") : "đang live"];
       }));
     }, function (e) { toast("Không tải được tổng kết: " + e.message); });
   }
